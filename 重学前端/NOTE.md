@@ -1,6 +1,102 @@
 ### 预习笔记
 ---
+#### 注意
+**语法 + 编译 = 运行时 表现的语义**
+**带`[[属性]]`的属性都表示JS引擎的内部属性，我们用任何方式都不能得到这个值**
+
 #### JavaScript 的类型，你忽视了啥
+##### 补充知识：Unicode、UTF8、UTF16
+###### 抽象字符
+抽象字符 = 有形字符(a、b、天) + 在计算机中表示空白的纯抽象字符（null、\x00)
+
+###### 抽象字符集（ACR）
++ 抽象字符的集合
++ 无序性
++ 如 ASCII、UCS、GBK都属于抽象字符集
+
+###### 编码字符集(CCS)
+为了更好的描述，操作字符，我们可以为抽象字符集中的每个字符关联一个数字编号，这个数字编号称之为**码位/码点**(Code Point)
++ 字符与码位产生了映射的关系
++ 编码字符集完全可以依据个人爱好来搞，如ASCII和UCS，但因为我们需要有一个同一的规范，因此产生了统一字符集（UCS)
+
+###### 统一字符集（UCS = Unicode)
+Unicode 只是一个符号集，它只规定了**符号的二进制代码**，却没有规定这个二进制代码应该如何存储，本质来说UCS是无限的
+
+这里就有两个严重的问题，第一个问题是，如何才能区别 Unicode 和 ASCII ？计算机怎么知道三个字节表示一个符号，而不是分别表示三个符号呢？第二个问题是，我们已经知道，英文字母只用一个字节表示就够了，如果 Unicode 统一规定，每个符号用三个或四个字节表示，那么每个英文字母前都必然有二到三个字节是0，这对于存储来说是极大的浪费，文本文件的大小会因此大出二三倍，这是无法接受的。
+
+它们造成的结果是：1）出现了 Unicode 的多种存储方式，也就是说有许多种不同的二进制格式，可以用来表示 Unicode。2）Unicode 在很长一段时间内无法推广，直到互联网的出现。
+
+###### UTF-8
+互联网的普及，强烈要求出现一种统一的编码方式。UTF-8 就是在互联网上使用最广的一种 Unicode 的实现方式。其他实现方式还包括 UTF-16（字符用两个字节或四个字节表示）和 UTF-32（字符用四个字节表示），不过在互联网上基本不用。重复一遍，这里的关系是，UTF-8 是 Unicode 的实现方式之一。
+
++ 变长的编码方式。它可以使用1~4个字节表示一个符号，根据不同的符号而变化字节长度
++ 对于单字节的符号，字节的第一位设为0，后面7位为这个符号的 Unicode 码。因此对于英语字母，`UTF-8 `编码和 `ASCII `码是相同的
++ 对于n字节的符号`（n > 1）`，第一个字节的前n位都设为`1`，第`n + 1`位设为0，后面字节的前两位一律设为10。剩下的没有提及的二进制位，全部为这个符号的 Unicode 码
+<img src="./image/pic2.png" style="width:120%"/>
+下面，还是以汉字严为例，演示如何实现 UTF-8 编码。
+
+`严`的 Unicode 是`4E25`（`100111000100101`），根据上表，可以发现`4E25`处在第三行的范围内（`0000 0800 - 0000 FFFF`），因此严的 UTF-8 编码需要三个字节，即格式是`1110xxxx 10xxxxxx 10xxxxxx`。然后，从严的最后一个二进制位开始，依次从后向前填入格式中的x，多出的位补0。这样就得到了，严的 UTF-8 编码是`11100100 10111000 10100101`，转换成十六进制就是`E4B8A5`。
+
+###### 字符编码表（CEF）
+在ASCII这样传统的、简单的字符编码系统中，并没有也不需要区分字符编号与字符编码，可认为字符编号就是字符编码，字符编号与字符编码之间是一个直接映射的关系。
+
+而在Unicode这样现代的、复杂的字符编码系统中，则必须区分字符编号与字符编码，字符编号不一定等于字符编码，字符编号与字符编码之间不一定是一个直接映射的关系，比如UTF-8、UTF-16为`间接映射`，而UTF-32则为`直接映射`。
+
+UTF-8、UTF-16与UTF-32等就是Unicode字符集(即编号字符集)`常用的字符编码方式CEF`。（UTF-8、UTF-16与UTF-32后文各有详细介绍）
+
+将编码字符集的非负整数值（即抽象的码位）转换成有限比特长度的整型值（称为**码元**code units）的序列
+
+虽然就目前来看，UCS收录的符号总共也就十多万个，用一个uint可以表示几十亿个字符呢。但谁知道哪天制定Unicode标准的同志们不会玩心大发造几十亿个Emoji加入UCS中。所以说到底，一对有限与无限的矛盾，必须通过一种方式进行调和。这个解决方案，就是字符编码表(Character Encoding Form)。
+
+字符编码方式CEF，是将编号字符集里字符的码点值(即码点编号、字符编号)转换成或者说编码成有限比特长度的编码值(即字符编码)。该编码值实际上是码元(Code Unit代码单元、编码单元)的序列(Code Unit Sequence)。
+
+
+参考链接：
+[字符编码掠影：现代编码模型](https://developer.aliyun.com/article/63036)
+[字符编码笔记：ASCII，Unicode 和 UTF-8](http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html)
+
+##### 运行时类型有哪些
++ undefined
++ null
++ boolean
++ string
+  + 最大长度2^53 - 1
+  + 它的最大长度表示的是编码长度
+  + 并不是每个码元都会对应着一个码点
++ number
+  + 有 2^64 - 2^53+3 个值
+  + IEEE 754-2008 规定的双精度浮点数规则
+  + 例外： NaN、Infinity、-Infinity
+  + +0 和 -0 并不一致
+  + 后面的浮点可能是系统自动为我们补充的
++ symbol 生成对象中唯一标识的key
++ object
+  + 几个基本类型在对象中都是有"亲戚"
+    + Number
+    + String
+    + Boolean
+    + Symbol
+  + 3 和 new Number(3) 是完全不同的值
+  + Symbol 函数比较特殊，直接用 new 调用它会抛出错误，但它仍然是 Symbol 对象的构造器
+
+##### 类型转换
+
+<img src="./image/pic4.png" />
+
+###### 补充知识：IEEE 754-2008 规定的浮点数规则
++ 分为 单精度浮点型 和 双精度浮点型
++ 约定俗成的认为 float = 单精度浮点型 , double = 双精度浮点型
+
+![32位浮点数](./image/pic3.png)
+32位浮点数分成：
++ sign 符号位 0是正数 1是负数
++ biased exponent 偏移后的指数位
++ fraction 尾数位
+
+参考资料:
+[浮点数的二进制表示](https://www.ruanyifeng.com/blog/2010/06/ieee_floating-point_representation.html)
+[IEEE754标准: 一 , 浮点数在内存中的存储方式](https://www.jianshu.com/p/8ee02e9bb57d)
+
 ##### 为什么要用void 0代替undefined
 `undefined`、`NaN`和`Infinity`都是全局对象window的属性,他只是将这个属性的`[[writable]]`改为了`false`而`null`则是JS的保留字
 ```javascript
@@ -25,7 +121,75 @@ console.log( 0.1 + 0.2 == 0.3); // false
 console.log( Math.abs(0.1 + 0.2 - 0.3) <= Number.EPSILON); // true
 ```
 
+##### 补充知识：Symbol
+本质上是一种唯一标识符，可用作对象的唯一属性名，这样其他人就不会改写或覆盖你设置的属性值
+Symbol 数据类型的特点是**唯一性**，即使是用同一个变量生成的值也不相等。
+```javascript
+  let id1 = Symbol('id');
+  let id2 = Symbol('id');
+  console.log(id1 == id2);  //false
+ ```
+
+ Symbol 数据类型的另一特点是隐藏性，`for···in`，`object.keys()` 不能访问
+ ```javascript
+ let id = Symbol("id");
+ let obj = {
+  [id]:'symbol'
+ };
+ for(let option in obj){
+     console.log(obj[option]); //空
+ }
+ ```
+
+但是也有能够访问的方法：`Object.getOwnPropertySymbols`
+`Object.getOwnPropertySymbols` 方法会返回一个数组，成员是当前对象的所有用作属性名的 Symbol 值。
+```javascript
+let id = Symbol("id");
+ let obj = {
+  [id]:'symbol'
+ };
+
+let array = Object.getOwnPropertySymbols(obj);
+ console.log(array); //[Symbol(id)]
+ console.log(obj[array[0]]);  //'symbol'
+```
+
+虽然这样保证了Symbol的唯一性，但我们不排除希望能够多次使用同一个symbol值的情况。
+为此，官方提供了全局注册并登记的方法：Symbol.for()
+```javascript
+ let name1 = Symbol.for('name'); //检测到未创建后新建
+ let name2 = Symbol.for('name'); //检测到已创建后返回
+ console.log(name1 === name2); // true
+ ```
+
+通过这种方法就可以通过参数值获取到全局的symbol对象了，反之，能不能通过symbol对象获取到参数值呢？
+是可以的 ，通过`Symbol.keyFor()`
+```javascript
+ let name1 = Symbol.for('name');
+ let name2 = Symbol.for('name');
+ console.log(Symbol.keyFor(name1));  // 'name'
+ console.log(Symbol.keyFor(name2)); // 'name'
+```
+在创建symbol类型数据时的参数只是作为标识使用，所以 `Symbol()` 也是可以的
+
+我们可以使用 Symbol.iterator 来自定义 for…of 在对象上的行为：
+```javascript
+ var o = new Object 
+ o[Symbol.iterator] = function() { 
+   var v = 0 
+    return { 
+      next: function() { 
+        return { value: v++, done: v > 10 } 
+        }
+      } 
+    }; 
+    
+    for(var v of o) 
+      console.log(v); // 0 1 2 3 ... 9
+ ```
+
 #### 拆箱与装箱
+类型转换能否构成装箱或者拆箱，前提是：这两个类型是否存在继承的关系
 每当读取一个基本类型的时候，后台就会创建一个对应的基本包装类型对象，从而让我们能够调用一些方法来操作这些数据。
 ```javascript
 var s1 = "abc";
