@@ -235,6 +235,8 @@ var s2 = s1.indexOf("a")
   + 对象有状态：对象具有状态，同一对象可能处于不同状态之下。
   + 对象具有行为：即对象的状态，可能因为它的行为产生变迁。
 
+**注意：** 我们的行为应该会使对象的状态发生改变才叫行为，如狗咬人，那行为应该是绑定在人身上，行为为受伤，绑在狗身上的话，狗的状态并没有变化，因此不应该算是狗得行为
+
 一般的编程语言：类描述对象，JS语言：原型，这种的不一样使得对象具有高度的动态性，这是因为 JavaScript 赋予了使用者在运行时为对象添改状态和行为的能力。
 
 ##### JS的两类属性
@@ -248,6 +250,13 @@ var s2 = s1.indexOf("a")
   + setter：函数或 undefined，在设置属性值时被调用
   + enumerable：决定 for in 能否枚举该属性
   + configurable：决定该属性能否被删除或者改变特征值
+
+我们可以使用内置函数 getOwnPropertyDescripter 来查看，如以下代码所示：
+```javascript
+  var o = { a: 1 }; o.b = 2; //a和b皆为数据属性 
+  Object.getOwnPropertyDescriptor(o,"a") // {value: 1, writable: true, enumerable: true, configurable: true} 
+  Object.getOwnPropertyDescriptor(o,"b") // {value: 2, writable: true, enumerable: true, configurable: true}
+  ```
 
 ##### 属性的获取及定义
 对象本质就是一个属性的索引结构，比如O对象来说，a就是key，然后{ value: 2, writable: false, enumerable: false, configurable: true }这些对象值就是value
@@ -267,7 +276,7 @@ var s2 = s1.indexOf("a")
    console.log(o.c); // 1
    console.log(Object.getOwnPropertyDescriptor(o, "c"))
 ```
-Javscript是一个面向对象的语言，但是由于他是以原型的方式来构造对象，使得他能够与其他编程语言不一样的对对象有着高度的动态性
+Javscript是一个面向对象的语言，但是由于他是以**原型**的方式来构造对象，使得他能够与其他编程语言不一样的对对象有着高度的动态性
 
 #### 我们真的需要类嘛
 JS得原型系统
@@ -279,8 +288,51 @@ JS得原型系统
 + Object.getPrototypeOf 获得一个对象的原型
 + Object.setPrototypeOf 设置一个对象的原型
 
+```javascript
+  var cat = {
+      say(){
+          console.log("meow~")
+      },
+      jump(){
+          console.log("jump")
+      }
+  }
+
+  var tiger = Object.create(cat,  {
+      say:{
+          writable:true,
+          configurable:true,
+          enumerable:true,
+          value:function(){
+              console.log("roar!")
+          }
+      }
+  })
+
+
+  var anotherCat = Object.create(cat)
+
+  anotherCat.say() // meow~
+
+  var anotherTiger = Object.create(tiger)
+
+  anotherTiger.say() // roar!
+```
+
+#### 类与原型的发展史
++ 早期类是一个私有属性`[[class]]`，内置类Number、String 等都有这个属性，我们唯一能够访问`[[class]]`属性的方式是`Object.prototype.toString`
++ ES5开始，[[class]] 私有属性被 Symbol.toStringTag 代替，Object.prototype.toString 的意义从命名上不再跟 class 相关。我们甚至可以自定义 Object.prototype.toString 的行为，以下代码展示了使用 Symbol.toStringTag 来自定义 Object.prototype.toString 的行为：
+```javascript
+  var o = { [Symbol.toStringTag]: "MyObject" } 
+  console.log(Object.prototype.toString.call(o));
+  console.log(o + "");
+```
++ ES6 中引入了 class 关键字，并且在标准中删除了所有`[[class]]`相关的私有属性描述，类的概念正式从属性升级成语言的基础设施
+
+#### 类的生成
 模拟生成类
 ```javascript
+//构造器修改this,给this添加属性
   function Cat() {
 
 　　　　this.name = "大毛";
@@ -290,12 +342,17 @@ JS得原型系统
 
 　alert(cat1.name); // 大毛
 
+//修改prototype属性指向
   function c2(){}
   c2.prototype.p1 = 1;
   c2.prototype.p2 = function(){ console.log(this.p1);}
   var o2 = new c2;
   o2.p2();
 ```
+new操作干了啥事：
++ 以构造器的 prototype 属性（注意与私有字段`[[prototype]]`的区分）为原型，创建新对象；
++ 将 this 和调用参数传给构造器，执行；
++ 如果构造器返回的是对象，则返回，否则返回第一步创建的对象。 
 
 用原型抽象并继承得例子
 ```javascript
@@ -336,16 +393,21 @@ JS得原型系统
   + 原生对象  使用内部构造器/特殊语法创建
   + 普通对象  {}、Object构造器、class关键字定义，**能被原型继承**
 
-> 固有对象和原生对象多数有私有字段，使得原型继承失效
+> 固有对象和原生对象多数有私有字段，使得原型继承失效,这些我们一般称为**特权对象**
 
 内置对象一览表
 ![](./image/pic1.png)
 
 #### 函数对象&构造器对象
-+ 具有`[[call]]`私有字段的对象，构造器对象的定义是：具有私有字段`[[construct]]`的对象
-+ `[[construct]]`的执行过程如下：以 `Object.prototype` 为原型创建一个新对象；以新对象为 this，执行函数的`[[call]]`；如果`[[call]]`的返回值是对象，那么，返回这个对象，否则返回第一步创建的新对象。
-
-这样的规则造成了个有趣的现象，如果我们的构造器返回了一个新的对象，那么 new 创建的新对象就变成了一个构造函数之外完全无法访问的对象，这一定程度上可以实现“私有”。
++ 函数对象的定义：具有`[[call]]`私有字段的对象，构造器对象的定义是：具有私有字段`[[construct]]`的对象
++ 任何宿主只要提供了“具有[[call]]私有字段的对象”，就可以被 JavaScript 函数调用语法支持。
++ 我们可以这样说，任何对象只需要实现[[call]]，它就是一个函数对象，可以去作为函数被调用。而如果它能实现[[construct]]，它就是一个构造器对象，可以作为构造器被调用
++ 对于宿主和内置对象来说，它们实现[[call]]（作为函数被调用）和[[construct]]（作为构造器被调用）不总是一致的
++ `[[construct]]`的执行过程如下：
+   + 以 `Object.prototype` 为原型创建一个新对象；
+   + 以新对象为 this，执行函数的`[[call]]`；
+   + 如果`[[call]]`的返回值是对象，那么，返回这个对象，否则返回第一步创建的新对象。
+   + 这样的规则造成了个有趣的现象，如果我们的构造器返回了一个新的对象，那么 new 创建的新对象就变成了一个构造函数之外完全无法访问的对象，这一定程度上可以实现“私有”。
 ```javascript
 function cls(){ 
   this.a = 100; 
@@ -426,3 +488,95 @@ JS标准中的闭包
   + ScriptOrModule：执行的任务是脚本或者模块时使用，表示正在被执行的代码。
   + Realm：使用的基础库和内置对象实例。
   + Generator：仅生成器上下文有这个属性，表示当前生成器。
+
+
+#### 要不要加分号
+##### 自动加分号规则
++ 有换行符，且下一个符号是不符合语法的，那么就尝试插入分号。
++ 有换行符，且语法中规定此处不能有换行符，那么就自动插入分号。[no LineTerminator here]
+  + 带标签的continue语句，不能再continue后插入换行
+  + 带标签的break语句，不能再break后插入换行
+  + return后不能插入换行
+  + 后自增、后自减运算符不能插入换行（a++,a--)
+  + throw 和 Exception 之间也不能插入换行符
+  + 凡是 async 关键字，后面都不能插入换行符
+  + 箭头函数的箭头前，也不能插入换行
+  + yield 之后，不能插入换行
++ 源代码结束处，不能形成完整的脚本或者模块结构，那么就自动插入分号。
+
+##### 没有分号的危险情况
+以括号开头的语句
+```javascript  
+(function(a){
+    console.log(a);
+})()
+(function(a){
+    console.log(a);
+})()
+```
+这个例子是比较有实际价值的例子，这里两个 function 调用的写法被称作 IIFE（立即执行的函数表达式），是个常见技巧。这段代码意图上显然是形成两个 IIFE。我们来看第三行结束的位置，JavaScript 引擎会认为函数返回的可能是个函数，那么，在后面再跟括号形成函数调用就是合理的，因此这里不会自动插入分号。
+
+以数组开头的语句
+```javascript 
+  var a = [[]]/*这里没有被自动插入分号*/
+  [3, 2, 1, 0].forEach(e => console.log(e))
+```
+这段代码本意是一个变量 a 赋值，然后对一个数组执行 forEach，但是因为没有自动插入分号，被理解为下标运算符和逗号表达式，我这个例子展示的情况，甚至不会抛出错误，这对于代码排查问题是个噩梦
+
+以正则表达式开头的语句
+```javascript 
+  var x = 1, g = {test:()=>0}, b = 1/*这里没有被自动插入分号*/
+  /(a)/g.test("abc")
+  console.log(RegExp.$1)
+```
+这段代码本意是声明三个变量，然后测试一个字符串中是否含有字母 a，但是因为没有自动插入分号，正则的第一个斜杠被理解成了除号，后面的意思就都变了。
+
+以 Template 开头的语句
+```javascript
+  var f = function(){
+    return "";
+  }
+  var g = f/*这里没有被自动插入分号*/
+  `Template`.match(/(a)/);
+  console.log(RegExp.$1)
+```
+这段代码本意是声明函数 f，然后赋值给 g，再测试 Template 中是否含有字母 a。但是因为没有自动插入分号，函数 f 被认为跟 Template 一体的，进而被莫名其妙地执行了一次。
+
+#### 脚本和模块
++ 脚本是可以由浏览器或者 node 环境引入执行的，而模块只能由 JavaScript 代码用 import 引入执行
++ 从概念上，我们可以认为脚本具有主动性的 JavaScript 代码段，是控制宿主完成一定任务的代码；而模块是被动性的 JavaScript 代码段，是等待被调用的库
++ 我们对标准中的语法产生式做一些对比，不难发现，实际上模块和脚本之间的区别仅仅在于是否包含 import 和 export
++ 现代浏览器可以支持用 script 标签引入模块或者脚本，如果要引入模块，必须给 script 标签添加 type=“module”
+
+##### import 声明
++ 带 from 的 import 意思是引入模块中的一部分信息，可以把它们变成本地的变量。
++ 带 from 的 import 细分又有三种用法，我们可以分别看下例子：
+  + import x from "./a.js" 引入模块中导出的默认值。
+  + import {a as x, modify} from "./a.js"; 引入模块中的变量。
+  + import * as x from "./a.js" 把模块中所有的变量以类似对象属性的方式引入。
+
+##### export 声明
+一种是独立使用 export 声明，
+另一种是直接在声明型语句前添加 export 关键字
+
+##### JS语句
++ 普通语句
+  + 语句块 
+    + 一对大括号
+    + 会产生作用域
+  + 空语句
+    + 独立的分号
+  + IF 语句
+  + switch语句
+    + case后加break才能及时打断
+  + 循环语句
+    + while 循环
+    + do while 循环
+    + for 循环
+    + for in循环 enumerable 特征
+    + for of 循环 iterator 机制
+    + for await of 循环
+  + return 
+  + break语句
+  + continue语句
++ 声明型语句

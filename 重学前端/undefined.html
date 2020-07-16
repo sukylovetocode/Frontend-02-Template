@@ -10,8 +10,10 @@
 <body>
 
     <script>
-        window.NaN = 123
-        console.log(window.NaN)
+        function string2number(str) {
+            return parseInt(str)
+        }
+        console.log(string2number('abc'))
     </script>
 </body>
 
