@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realm对象的可视化</title>
+</head>
+<body>
+
+    <div id="container"></div>
+    
+    <!-- 引入 G6 -->
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.5.10/dist/g6.min.js"></script>
+    <script>
+        
+    // 递归 + 紧凑树
+   
+var set = new Set();
+var objects = {
+    'id': 'realm',
+    "children":[
+        {
+            "id":'函数属性',
+            "children": [
+                eval,
+                isFinite,
+                isNaN,
+                parseFloat,
+                parseInt,
+                decodeURI,
+                decodeURIComponent,
+                encodeURI,
+                encodeURIComponent
+            ]
+        },
+        {
+            'id':'基本对象',
+            "children": [
+                Function,
+                Boolean,
+                Symbol,
+                Object
+            ]
+        },
+        {
+            'id':'错误对象',
+            "children":[
+                Error,
+                EvalError,
+                RangeError,
+                ReferenceError,
+                SyntaxError,
+                TypeError,
+                URIError,
+            ]
+        },
+        {
+            'id':'数字和日期对象',
+            "children":[
+                Number,
+                Date,
+                Math
+            ]
+        },
+        {
+            'id':'字符串',
+            "children":[
+                String,
+                RegExp
+            ]
+        },
+        {
+            "id":"可索引的集合对象",
+            "children": [
+                Array,
+                Float32Array,
+                Float64Array,
+                Int8Array,
+                Int16Array,
+                Int32Array,
+                Uint8Array,
+                Uint16Array,
+                Uint32Array,
+                Uint8ClampedArray
+            ]
+        },
+        {
+            "id":"使用键的集合对象",
+            "children": [
+                Map,
+                WeakMap,
+                Set,
+                WeakSet
+            ]
+        },
+        {
+            "id":"结构化数据",
+            "children":[
+                ArrayBuffer,
+                SharedArrayBuffer,
+                Atomics,
+                DataView,
+                JSON
+            ]
+        },
+        {
+            "id":"控制抽象对象",
+            "children":[
+                 Promise,
+                //  Generator,
+                //  GeneratorFunction,
+                //  AsyncFunction
+            ]
+        },
+        {
+            "id":"反射",
+            "children":[
+                Proxy,
+                Reflect
+            ]
+        }
+    ]
+}
+
+// 打印出所有的对象，but 里面有原生代码无法输出
+// objects.children.forEach((o,index) => {
+//     var c = getAllObject(o)
+//     console.log(objects.children[index].children)
+//     objects.children[index].children = c
+// });
+
+function getAllObject(obj){
+    var arr = []
+    for(var i = 0; i < obj.children.length; i++) {
+        var o = obj.children[i]
+        for(var p of Object.getOwnPropertyNames(o)) {
+            var d = Object.getOwnPropertyDescriptor(o, p)
+            if( (d.value !== null && typeof d.value === "object") || (typeof d.value === "function")){
+                if(!set.has(d.value))
+                    set.add(d.value)
+                    var a = {}
+                    a.id = d.value
+                    console.log(d.value)
+                    arr.push(a)
+            }
+            if( d.get ){
+                if(!set.has(d.get))
+                    set.add(d.get)
+                    var a = {}
+                    a.id = d.value
+                    arr.push(a)
+            }
+            if( d.set ){
+                if(!set.has(d.set))
+                    set.add(d.set)
+                    var a = {}
+                    a.id = d.value
+                    arr.push(a)
+            }
+        }
+    }
+    return arr
+}
+
+var objectsView = {
+    'id': 'realm',
+    "children":[
+        {
+            "id":'函数属性',
+            "children": [
+                { 'id':'eval'},
+                { 'id':'isFinite'},
+                { 'id':'isNaN'},
+                { 'id':'parseFloat'},
+                { 'id':'parseInt'},
+                { 'id':'decodeURI'},
+                { 'id':'decodeURIComponent'},
+                { 'id':'encodeURI'},
+                { 'id':'encodeURIComponent'}
+            ]
+        },
+        {
+            'id':'基本对象',
+            "children": [
+                { 'id':'Function'},
+                { 'id':'Boolean'},
+                { 'id':'Symbol'},
+                { 'id':'Object'}
+            ]
+        },
+        {
+            'id':'错误对象',
+            "children":[
+                { 'id':'Error'},
+                { 'id':'EvalError'},
+                { 'id':'RangeError'},
+                { 'id':'ReferenceError'},
+                { 'id':' SyntaxError'},
+                { 'id':' TypeError'},
+                { 'id':'URIError'}
+            ]
+        },
+        {
+            'id':'数字和日期对象',
+            "children":[
+                { 'id':'Number'},
+                { 'id':'Date'},
+                { 'id':'Math'}
+            ]
+        },
+        {
+            'id':'字符串',
+            "children":[
+                { 'id':'String'},
+                { 'id':'RegExp'}
+            ]
+        },
+        {
+            "id":"可索引的集合对象",
+            "children": [
+                { 'id':'Array'},
+                { 'id':'Float32Array'},
+                { 'id':' Float64Array'},
+                { 'id':'Int8Array'},
+                { 'id':'Int16Array'},
+                { 'id':'Int32Array'},
+                { 'id':'Uint8Array'},
+                { 'id':' Uint16Array'},
+                { 'id':'Uint32Array'},
+                { 'id':'Uint8ClampedArray'}
+            ]
+        },
+        {
+            "id":"使用键的集合对象",
+            "children": [
+                { 'id':'Map'},
+                { 'id':'WeakMap'},
+                { 'id':'Set'},
+                { 'id':'WeakSet'}
+            ]
+        },
+        {
+            "id":"控制抽象对象",
+            "children":[
+                { 'id':'Promise'}
+                //  Generator,
+                //  GeneratorFunction,
+                //  AsyncFunction
+            ]
+        },
+        {
+            "id":"反射",
+            "children":[
+                { 'id':'Proxy'},
+                { 'id':'Reflect'}
+            ]
+        },
+        {
+            "id":"结构化数据",
+            "children":[
+                { 'id':'SharedArrayBuffer'},
+                { 'id':'ArrayBuffer'},
+                { 'id':'Atomics'},
+                { 'id':'DataView'},
+                { 'id':'JSON'}
+            ]
+        }
+    ]
+}
+
+const width = document.getElementById('container').scrollWidth;
+const height = document.getElementById('container').scrollHeight || 500;
+const graph = new G6.TreeGraph({
+      container: 'container',
+      width,
+      height,
+      modes: {
+        default: [
+          {
+            type: 'collapse-expand',
+            onChange: function onChange(item, collapsed) {
+              const data = item.get('model').data;
+              data.collapsed = collapsed;
+              return true;
+            },
+          },
+          'drag-canvas',
+          'zoom-canvas',
+        ],
+      },
+      defaultNode: {
+        size: 26,
+        anchorPoints: [
+          [0, 0.5],
+          [1, 0.5],
+        ],
+        style: {
+          fill: '#C6E5FF',
+          stroke: '#5B8FF9',
+        },
+      },
+      defaultEdge: {
+        type: 'cubic-horizontal',
+        style: {
+          stroke: '#A3B1BF',
+        },
+      },
+      layout: {
+        type: 'compactBox',
+        direction: 'LR',
+        getId: function getId(d) {
+          return d.id;
+        },
+        getHeight: function getHeight() {
+          return 16;
+        },
+        getWidth: function getWidth() {
+          return 16;
+        },
+        getVGap: function getVGap() {
+          return 10;
+        },
+        getHGap: function getHGap() {
+          return 100;
+        },
+      },
+    });
+
+    graph.node(function(node) {
+      return {
+        label: node.id,
+        labelCfg: {
+          offset: 10,
+          position: node.children && node.children.length > 0 ? 'left' : 'right',
+        },
+      };
+    });
+
+    graph.data(objectsView);
+    graph.render();
+    graph.fitView();
+
+    </script>
+</body>
+</html>
