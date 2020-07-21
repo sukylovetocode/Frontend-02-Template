@@ -44,3 +44,9 @@
     + 关系表达
     
     + 相等
+
+completion record
++ [[type]]
++ [[value]]
++ [[target]]
+
