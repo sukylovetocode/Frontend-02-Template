@@ -54,3 +54,8 @@ IP
 + 在Request构造器中收集必要的信息
 + 设计一个send函数，把请求真实发送到服务器
 + send函数应该是异步的，所以返回promise 
+
+###### 发送请求
++ 设计支持已有的connection或者自己新建的connection
++ 收到数据传给parser
++ 根据parser状态resolve Promise
