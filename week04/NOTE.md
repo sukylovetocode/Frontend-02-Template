@@ -59,3 +59,15 @@ IP
 + 设计支持已有的connection或者自己新建的connection
 + 收到数据传给parser
 + 根据parser状态resolve Promise
+
+###### responseParser
++ Response必须分段构造，我们需要一个ResponseParser来装配
++ ResponseParser分段处理ResponseText,我们使用状态机来分析文本结构
+
+###### BodyParser总结
++ Response的body可能根据Content-Type有不同的结构，因此我们采用子Parser的结构来解决问题
++ 以TrunkedBodyParser为例，我们同样用状态机处理body格式
+
+###### HTML parse模块文件拆分
++ 方便文件管理，将parser单独拆到文件中
++ parser接受HTML文本作为参数，返回一颗dom树
