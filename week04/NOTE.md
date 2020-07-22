@@ -71,3 +71,16 @@ IP
 ###### HTML parse模块文件拆分
 + 方便文件管理，将parser单独拆到文件中
 + parser接受HTML文本作为参数，返回一颗dom树
+
++ 使用FSM来实现HTML的分析
++ 在HTML标准中，已经规定了HTML的状态
++ ToyBrowser中精选版本，完成一个最精简的
+[HTML标准](https://html.spec.whatwg.org/multipage/)
+
+###### 解析标签
++ 主要的标签为：开始标签 结束标签 自封闭标签
++ 在现在我们暂时忽略属性
+
+###### 创建元素
++ 状态机中，除了状态迁移，还会加入业务逻辑
++ 我们在标签结束状态提交标签token
