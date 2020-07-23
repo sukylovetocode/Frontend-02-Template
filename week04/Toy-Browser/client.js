@@ -41,7 +41,7 @@ class Request{
                 }, () => {
                     console.log('连接到服务器')
                     connection.write(this.toString())
-                    console.log(this.toString())
+                    // console.log(this.toString())
                 });
             }
 
@@ -50,10 +50,10 @@ class Request{
                 console.log(data.toString())
                 parser.receive(data.toString())
                 
-                if(parser.isFinished){
-                    resolve(parser.response)
-                    connection.end() // 关闭链接
-                }
+                // if(parser.isFinished){
+                //     resolve(parser.response)
+                //     connection.end() // 关闭链接
+                // }
             });
 
             connection.on('error', (err) => {
@@ -111,30 +111,31 @@ class ResponseParser{
         }
     }
 
+    // 对响应进行状态解析
     receiveChar(char){
-        if(this.current === this.WAITING_STATUS_LINE){
-            if(char === '\r'){
+        if(this.current === this.WAITING_STATUS_LINE){ //请求行 HTTP/1.1 200 OK
+            if(char === '\r'){ // 等到换行时进入下一个状态
                 this.current = this.WAITING_STATUS_LINE_END
             }else{
                 this.statusLine += char
             }
-        }else if(this.current === this.WAITING_STATUS_LINE_END){
+        }else if(this.current === this.WAITING_STATUS_LINE_END){ // HTTP/1.1 200 OK 的结尾
             if(char === '\n'){
-                this.current = this.WAITING_HEADER_NAME
+                this.current = this.WAITING_HEADER_NAME // 响应头 Content-Type: text/html
             }
         }else if(this.current === this.WAITING_HEADER_NAME){
-            if(char === ':'){
+            if(char === ':'){ // Content-Type: text/html  Content-Type: 后面跟着一个空格
                 this.current = this.WAITING_HEADER_SPACE
             }else if(char === '\r'){
-                this.current === this.WAITING_HEADER_BLOCK_END
+                this.current === this.WAITING_HEADER_BLOCK_END // 响应头结束
                 // 和head 相关没法一开始就能够建立
                 if(this.headers['Transform-Encoding'] === 'chunked'){
                     this.bodyParser = new TrunkedBodyParser()
                 }
             }else{
-                this.headerName += char
+                this.headerName += char // text/html
             }
-        }else if(this.current === this.WAITING_HEADER_LINE_END){
+        }else if(this.current === this.WAITING_HEADER_LINE_END){ 
             if(char === '\n'){
                 this.current === this.WAITING_HEADER_NAME
             }
@@ -163,7 +164,6 @@ class TrunkedBodyParser{
     }
 
     receiveChar(char){
-        console.log('ddd')
         if(this.current === this.WAITING_LENGTH){
             if(char === '\r'){
                 if(this.length === 0){
@@ -213,20 +213,9 @@ void async function(){
 
     let response = await request.send()
 
-    console.log(response)
+    console.log(response.body)
 
     // let dom = parser.parseHTML(response.body)
+    // console.log(dom)
 }();
 
-// 逐步接收
-// class ResponseParser{
-//     constructor(){}
-//     receive(string){
-//         for(let i=0;i<string.length;i++){
-//             this.receiveChar(string.chatAt(i))
-//         }
-//     }
-//     receiveChar(char){
-
-//     }
-// }

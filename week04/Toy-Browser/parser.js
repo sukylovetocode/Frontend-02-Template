@@ -1,27 +1,82 @@
 const EOF = Symbol("EOF") // 无任何意义，仅仅用于结束我们的html文件
 
 let currentToken = null
+let currentAttribute = null 
+
+let stack = [{type:"document", children: []}]
 
 //全局状态 用于输出
 function emit(token){
-    console.log(token)
+    if(token.type === "text"){
+        return
+    }
+
+    let top = stack[stack.length - 1]
+
+    if(token.type == "startTag"){
+        let element = {
+            type: "element",
+            children: [],
+            attributes: []
+        }
+
+        element.tagName = token.tagName
+
+        for(let p in token){
+            if(p != "type" && p != "tagName"){
+                element.attributes.push({
+                    name: p,
+                    value: token[p]
+                })
+            }
+        }
+
+        top.children.push(element)
+        element.parent = top
+
+        if(!token.isSelfClosing){
+            stack.push(element)
+        }
+        
+        currentTextNode = null
+
+    }else if(token.type == "endTag"){
+        if(top.tagName != token.tagName){
+            throw new Error("Tag start end doesn't match")
+        }else{
+            stack.pop()
+        }
+
+        currentTextNode = null
+    }else if(token.type == "text"){
+        if(currentTextNode == null){
+            currentTextNode = {
+                type: "text",
+                content: ""
+            }
+            top.children.push(currentTextNode)
+        }
+        currentTextNode.content += token.content 
+    }
 }
 
 function data(c){
-    if(c == "<"){
-        return tagOpen
-    }else if(c == EOF){
-        emit({
-            type:"EOF"
-        })
-        return
-    }else{
-        emit({
-            type: "text",
-            content: c
-        })
-        return data
-    }
+    console.log(c)
+    return data
+    // if(c == "<"){
+    //     return tagOpen
+    // }else if(c == EOF){
+    //     emit({
+    //         type:"EOF"
+    //     })
+    //     return
+    // }else{
+    //     emit({
+    //         type: "text",
+    //         content: c
+    //     })
+    //     return data
+    // }
 }
 
 function tagOpen(c){
@@ -74,12 +129,113 @@ function tagName(c){
 function beforeAttributeName(c){
     if(c.match(/^[\t\n\f ]$/)){
         return beforeAttributeName
-    }else if(c == ">"){
-        return data
+    }else if(c == "/" || c == ">" || c ==EOF){
+        return afterAttributeName(c)
     }else if(c == "="){
-        return beforeAttributeName
+        
     }else{
+        currentAttribute = {
+            name: "",
+            value: ""
+        }
+        return attributeName(c)
+    }
+}
+
+function attributeName(c){
+    if(c.match(/^[\t\n\f ]$/) || c == "/" || c == ">" || c == EOF){
+        return afterAttributeName(c)
+    }else if(c == "="){
+        return beforeAttributeValue
+    }else if(c == '\u0000'){
+
+    }else if(c == "\"" || c == "'" || c == "<"){
+
+    }else{
+        currentAttribute.name += c
+        return attributeName
+    }
+}
+
+function beforeAttributeValue(c){
+    if(c.match(/^[\t\n\f ]$/) || c == "/" || c == ">" || c == EOF){
+        return beforeAttributeValue
+    }else if(c == "\""){
+        return doubleQuotedAttributeValue
+    }else if(c == "\'"){
+        return singleQuotedAttributeValue
+    }else if(c == ">"){
+
+    }else{
+        return UnquotedAttributeValue(c)
+    }
+}
+
+function doubleQuotedAttributeValue(c){
+    if(c == "\'"){
+        currentToken[currentAttribute.name] = currentAttribute.value
+        return afterQuotedAttributeValue
+    }else if(c == "\u0000"){
+
+    }else if(c == EOF){
+        
+    }else{
+        currentAttribute.value += c
+        return doubleQuotedAttributeValue
+    }
+}
+
+function singleQuotedAttributeValue(c){
+    if(c == "\'"){
+        currentToken[currentAttribute.name] = currentAttribute.value
+        return afterQuotedAttributeValue
+    }else if(c == "\u0000"){
+
+    }else if(c == EOF){
+
+    }else{
+        currentAttribute.value += c
+        return doubleQuotedAttributeValue
+    }
+}
+
+function UnquotedAttributeValue(c){
+    if(c.match(/^[\t\n\f ]$/)){
+        currentToken[currentAttribute.name] = currentAttribute.value
         return beforeAttributeName
+    }else if(c == "/"){
+        currentToken[currentAttribute.name] = currentAttribute.value
+        return selfClosingStartTag
+    }else if(c == ">"){
+        currentToken[currentAttribute.name] = currentAttribute.value
+        emit(currentToken)
+        return data
+    }else if(c == "\u0000"){
+
+    }else if(c == "\"" || c == "'" || c == "<" || c == "=" || c == "`"){
+
+    }else if(c == EOF){
+
+    }else{
+        currentAttribute.value += c
+        return UnquotedAttributeValue
+    }
+}
+
+function afterQuotedAttributeValue(c){
+    if(c.match(/^[\t\n\f ]$/)){
+        return beforeAttributeName
+    }else if(c == "/"){
+        return selfClosingStartTag
+    }else if(c == ">"){
+        currentToken[currentAttribute.name] = currentAttribute.value
+        emit(currentToken)
+        return data
+    }else if(c == EOF){
+
+    }else{
+        currentAttribute.value += c
+        return doubleQuotedAttributeValue
     }
 }
 
@@ -100,4 +256,5 @@ module.exports.parserHTML = function parserHTML(html){
         state = state(c)
     }
     state = state(EOF)
+    return stack[0]
 }
