@@ -47,13 +47,13 @@ class Request{
 
             // 流模式，持续接受参数
             connection.on('data', function(data){
-                console.log(data.toString())
+                // console.log(data.toString())
                 parser.receive(data.toString())
                 
-                // if(parser.isFinished){
-                //     resolve(parser.response)
-                //     connection.end() // 关闭链接
-                // }
+                if(parser.isFinished){
+                    resolve(parser.response)
+                    connection.end() // 关闭链接
+                }
             });
 
             connection.on('error', (err) => {
@@ -83,7 +83,7 @@ class ResponseParser{
         this.WAITING_HEADER_BLOCK_END = 6
         this.WAITING_BODY = 7
 
-        this.current = this.WAITING_STATUS_LINE
+        this.current = this.WAITING_STATUS_LINE  // 当前状态 
         this.statusLine = ""
         this.headers = {}
         this.headerName = ""
@@ -96,6 +96,7 @@ class ResponseParser{
     }
 
     get response(){
+        console.log(this.bodyParser)
         this.statusLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/)
         return {
             statusCode: RegExp.$1,
@@ -125,19 +126,32 @@ class ResponseParser{
             }
         }else if(this.current === this.WAITING_HEADER_NAME){
             if(char === ':'){ // Content-Type: text/html  Content-Type: 后面跟着一个空格
-                this.current = this.WAITING_HEADER_SPACE
+                this.current = this.WAITING_HEADER_SPACE 
             }else if(char === '\r'){
-                this.current === this.WAITING_HEADER_BLOCK_END // 响应头结束
+                this.current = this.WAITING_HEADER_BLOCK_END // 响应头结束
                 // 和head 相关没法一开始就能够建立
-                if(this.headers['Transform-Encoding'] === 'chunked'){
+                if(this.headers['Transfer-Encoding'] === 'chunked'){
                     this.bodyParser = new TrunkedBodyParser()
                 }
             }else{
                 this.headerName += char // text/html
             }
+        }else if(this.current === this.WAITING_HEADER_SPACE){
+            if(char === ' '){
+                this.current = this.WAITING_HEADER_VALUE //Content-Type: 后面跟着一个空格跳到这里
+            }
+        }else if(this.current === this.WAITING_HEADER_VALUE){
+            if(char === '\r'){ // this.headerValue 结束后
+                this.current = this.WAITING_HEADER_LINE_END
+                this.headers[this.headerName] = this.headerValue
+                this.headerName = "" // zhi kong
+                this.headerValue = ""
+            }else{
+                this.headerValue += char
+            }
         }else if(this.current === this.WAITING_HEADER_LINE_END){ 
             if(char === '\n'){
-                this.current === this.WAITING_HEADER_NAME
+                this.current = this.WAITING_HEADER_NAME // Content-Type 读完
             }
         }else if(this.current === this.WAITING_HEADER_BLOCK_END){
             if(char === '\n'){
@@ -171,7 +185,7 @@ class TrunkedBodyParser{
                 }
                 this.current = this.WAITING_LENGTH_LINE_END
             }else{
-                this.length *= 16
+                this.length *= 16 // 16进制的处理
                 this.length += parseInt(char, 16)
             }
         }else if(this.current === this.WAITING_LENGTH_LINE_END){
@@ -182,11 +196,12 @@ class TrunkedBodyParser{
             this.content.push(char)
             this.length --
             if(this.length === 0){
+                console.log(this.length)
                 this.current = this.WAITING_NEW_LINE
             }
         }else if(this.current === this.WAITING_NEW_LINE){
             if(char === '\r'){
-                this.current === this.WAITING_NEW_LINE_END
+                this.current = this.WAITING_NEW_LINE_END
             }
         }else if(this.current === this.WAITING_NEW_LINE_END){
             if(char === '\n'){
@@ -213,7 +228,7 @@ void async function(){
 
     let response = await request.send()
 
-    console.log(response.body)
+    console.log(response)
 
     // let dom = parser.parseHTML(response.body)
     // console.log(dom)
