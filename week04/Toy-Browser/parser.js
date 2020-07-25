@@ -61,22 +61,20 @@ function emit(token){
 }
 
 function data(c){
-    console.log(c)
-    return data
-    // if(c == "<"){
-    //     return tagOpen
-    // }else if(c == EOF){
-    //     emit({
-    //         type:"EOF"
-    //     })
-    //     return
-    // }else{
-    //     emit({
-    //         type: "text",
-    //         content: c
-    //     })
-    //     return data
-    // }
+    if(c == "<"){
+        return tagOpen
+    }else if(c == EOF){
+        emit({
+            type:"EOF"
+        })
+        return
+    }else{
+        emit({
+            type: "text",
+            content: c
+        })
+        return data
+    }
 }
 
 function tagOpen(c){
@@ -250,7 +248,7 @@ function selfClosingStartTag(c){
     }
 }
 
-module.exports.parserHTML = function parserHTML(html){
+module.exports.parseHTML = function parseHTML(html){
     let state = data
     for(let c of html){
         state = state(c)

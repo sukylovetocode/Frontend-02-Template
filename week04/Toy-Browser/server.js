@@ -11,12 +11,12 @@ http.createServer((request, response) => {
         // console.log(body)
         // console.log('body:', body)
         response.writeHead(200, {'Content-Type': 'text/html'})
-        // response.end(' Hello World ')
-        response.end(`<html>
-        <div>
-            我的妈呀
-        </div>
-        </html>`)
+        response.end('<html><div>hello</div></html> ')
+        // response.end(`<html>
+        // <div>
+        //     我的妈呀
+        // </div>
+        // </html>`)
     })
 }).listen(8088)
 

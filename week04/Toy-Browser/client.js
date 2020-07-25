@@ -1,7 +1,7 @@
 // URL解析HTTP并响应
 const net = require('net')
 const parser = require('./parser.js')
-const { parse } = require('path')
+
 
 class Request{
     // 对请求进行一定的处理
@@ -28,7 +28,7 @@ class Request{
     // 建立链接并发送请求
     send(connection){
         return new Promise((resolve, reject) => {
-            const parser = new ResponseParser // 接受的是流模式
+            const parser = new ResponseParser() // 接受的是流模式
             if(connection){
                 console.log('已有连接');
                 // 建立链接的话，数据写进去传出去
@@ -51,6 +51,7 @@ class Request{
                 parser.receive(data.toString())
                 
                 if(parser.isFinished){
+                    console.log('解析完成')
                     resolve(parser.response)
                     connection.end() // 关闭链接
                 }
@@ -96,7 +97,6 @@ class ResponseParser{
     }
 
     get response(){
-        console.log(this.bodyParser)
         this.statusLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/)
         return {
             statusCode: RegExp.$1,
@@ -178,7 +178,7 @@ class TrunkedBodyParser{
     }
 
     receiveChar(char){
-        if(this.current === this.WAITING_LENGTH){
+        if(this.current === this.WAITING_LENGTH){ //4c 字符串一共的长度
             if(char === '\r'){
                 if(this.length === 0){
                     this.isFinished = true
@@ -188,15 +188,14 @@ class TrunkedBodyParser{
                 this.length *= 16 // 16进制的处理
                 this.length += parseInt(char, 16)
             }
-        }else if(this.current === this.WAITING_LENGTH_LINE_END){
+        }else if(this.current === this.WAITING_LENGTH_LINE_END){ // 准备处理正文
             if(char === '\n'){
-                this.current = this.READING_TRUNK 
+                this.current = this.READING_TRUNK //准备读取html
             }
         }else if(this.current === this.READING_TRUNK){
-            this.content.push(char)
+            this.content.push(char) //正文76个字符串都得读完
             this.length --
             if(this.length === 0){
-                console.log(this.length)
                 this.current = this.WAITING_NEW_LINE
             }
         }else if(this.current === this.WAITING_NEW_LINE){
@@ -212,7 +211,7 @@ class TrunkedBodyParser{
 }
 
 
-void async function(){
+void async function(){ // 自执行函数
     let request = new Request({
         method: "POST",
         host: "127.0.0.1",
@@ -228,9 +227,8 @@ void async function(){
 
     let response = await request.send()
 
-    console.log(response)
-
-    // let dom = parser.parseHTML(response.body)
-    // console.log(dom)
+    // 应该变成异步分段处理的
+    let dom = parser.parseHTML(response.body)  
+    console.log(dom)
 }();
 
