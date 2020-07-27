@@ -9,7 +9,7 @@
       "request": "launch",
       "name": "启动程序",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}\\week04\\Toy-Browser\\client.js"
+      "program": "${workspaceFolder}\\week05\\Toy-Browser\\client.js"
     }
   ]
 }
