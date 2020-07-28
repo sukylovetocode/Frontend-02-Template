@@ -13,11 +13,13 @@ http.createServer((request, response) => {
         response.writeHead(200, {'Content-Type': 'text/html'})
         // response.end(' Hello World ')
         response.end(`<html>
+        <head>
         <style>
         div{
             color:red;
         }
         </style>
+        </head>
         <div>
             我的妈呀
         </div>

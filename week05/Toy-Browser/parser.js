@@ -16,6 +16,11 @@ function addCSSRules(text){
     rules.push(...ast.stylesheet.rules)
 }
 
+
+function computeCSS(element){
+    console.log("compute CSS for element", element)
+}
+
 //全局状态 用于输出
 function emit(token){
     if(token.type === "text"){
@@ -41,6 +46,8 @@ function emit(token){
                 })
             }
         }
+
+        computeCSS(element)
 
         top.children.push(element)
         element.parent = top
@@ -76,22 +83,21 @@ function emit(token){
 }
 
 function data(c){
-    console.log(c)
-    return data
-    // if(c == "<"){
-    //     return tagOpen
-    // }else if(c == EOF){
-    //     emit({
-    //         type:"EOF"
-    //     })
-    //     return
-    // }else{
-    //     emit({
-    //         type: "text",
-    //         content: c
-    //     })
-    //     return data
-    // }
+    console.log('进入data')
+    if(c == "<"){
+        return tagOpen
+     }else if(c == EOF){
+         emit({
+             type:"EOF"
+         })
+        return
+     }else{
+         emit({
+             type: "text",
+             content: c
+         })
+         return data
+     }
 }
 
 function tagOpen(c){

@@ -41,14 +41,13 @@ class Request{
                 }, () => {
                     console.log('连接到服务器')
                     connection.write(this.toString())
-                    // console.log(this.toString())
                 });
             }
 
             // 流模式，持续接受参数
             connection.on('data', function(data){
-                // console.log(data.toString())
                 parser.receive(data.toString())
+                console.log('流')
                 
                 if(parser.isFinished){
                     resolve(parser.response)
@@ -225,6 +224,7 @@ void async function(){
             name:"suky"
         }
     })
+
 
     let response = await request.send()
 
