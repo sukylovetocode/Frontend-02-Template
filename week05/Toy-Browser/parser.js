@@ -16,9 +16,61 @@ function addCSSRules(text){
     rules.push(...ast.stylesheet.rules)
 }
 
+function match(element, selector){
+    if(!selector || !element.attributes){
+        return false
+    }
+
+    if(selector.charAt(0) == "#"){
+        var attr = element.attributes.filter(attr => attr.name === "id")[0]
+        if(attr && attr.value === selector.replace('#', '')){
+            return true
+        }
+    }else if(selector.charAt(0) == "."){
+            var attr = element.attributes.filter(attr => attr.name === "class")[0]
+            if(attr && attr.value === selector.replace('#', '')){
+                return true
+            }
+    }else{
+        if(element.tagName === selector){
+            return true
+          }
+    }
+    
+}
 
 function computeCSS(element){
     console.log("compute CSS for element", element)
+    // 根据当前元素逐级得往外匹配
+    var elements = stack.slice().reverse()
+
+    if(!element.computedStyle){
+        element.computedStyle = {}
+    }
+
+    for(let rule of rules){
+        var selectorParts = rule.selectors[0].split(" ").reverse()
+
+        if(!match(element, selectorParts[0])){
+            continue
+        }
+
+        let matched = false
+
+        var j = 1
+        for(var i=0;i<elements.length;i++){
+            if(match(elements[i], selectorParts[j])){
+                j++
+            }
+        }
+        if(j>=selectorParts.length){
+            matched = true
+        }
+        if(matched){
+            // 如果匹配到，我们要加入
+            console.log("element",element,"matched rule",rule)
+        }
+    }
 }
 
 //全局状态 用于输出
