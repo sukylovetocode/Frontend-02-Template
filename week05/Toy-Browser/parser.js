@@ -39,6 +39,35 @@ function match(element, selector){
     
 }
 
+function specificity(selector){
+    var p = [0,0,0,0]
+    var selectorParts = selector.split(" ")
+    for(var part of selectorParts){
+        if(part.charAt(0) == "#"){
+            p[1] += 1
+        }else if(part.charAt(0) == "."){
+            p[2] += 1
+        }else{
+            p[3] += 1
+        }
+    }
+    return p
+}
+
+function compare(sp1, sp2){
+    if(sp1[0] - sp2[0]){
+        return sp1[0] - sp2[0]
+    }
+    if(sp1[1] - sp2[1]){
+        return sp1[1] - sp2[1]
+    }
+    if(sp1[2] - sp2[2]){
+        return sp1[2] - sp2[2]
+    }
+    return sp1[3] - sp2[3]
+}
+
+
 function computeCSS(element){
     console.log("compute CSS for element", element)
     // 根据当前元素逐级得往外匹配
@@ -69,6 +98,21 @@ function computeCSS(element){
         if(matched){
             // 如果匹配到，我们要加入
             console.log("element",element,"matched rule",rule)
+            var sp = specificity(rule.selectors[0])
+            var computedStyle = element.computedStyle
+            for(var declaration of rule.declarations){
+                if(!computedStyle[declaration.property]){
+                    computedStyle[declaration.property] = {}
+                }
+                if(!computedStyle[declaration.property].specificity){
+                    computedStyle[declaration.propety].value = declaration.value
+                    computedStyle[declaration.property].specificity = sp
+                }else if(compare(computedStyle[declaration.property].specificity, sp) < 0){
+                    computedStyle[declaration.propety].value = declaration.value
+                    computedStyle[declaration.property].specificity = sp
+                }
+            }
+            console.log(element.computedStyle)
         }
     }
 }
