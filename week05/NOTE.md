@@ -23,3 +23,6 @@ AST抽象语法树
 + css规则根据specificity和后来优先规则覆盖
 + specificity是个四元组，越左边权重越高
 + 一个CSS规则的specificity根据包含的简单选择器相加而成
+
++ 排版
++ 
