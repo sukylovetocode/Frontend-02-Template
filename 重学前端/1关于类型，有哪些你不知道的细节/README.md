@@ -16,6 +16,6 @@
 + 我们在函数内部定义undefined时还能够重新赋值
 
 ##### 字符串和其他其他数据类型在内存中的储存和引用
-
+https://www.cnblogs.com/luckq/p/9681259.html
 
 
