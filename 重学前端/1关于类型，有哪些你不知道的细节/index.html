@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>void 0 和undefined</title>
+</head>
+
+<body>
+
+    <script>
+        // undefined 值得正确获取
+        console.log(void undefined)
+        function f() {
+            var undefined = 'abc'
+            console.log(undefined)
+        }
+        f()
+    </script>
+</body>
+
+</html>
