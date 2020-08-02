@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>stringtonumber</title>
+</head>
+<body>
+    
+
+    <script>
+         var a = '0b111'
+        console.log(parseFloat(a))
+
+        var b = '1e3'
+        console.log(parseInt(b))
+        //不用Number和parseInt实现的stringtonumber
+        function stringToNumber(str){
+            if(str.match(/\.[0-9]+|(?:[1-9]+[0-9]*|0)(?:\.[0-9]*|\.)?(?:[eE][+-]{0,1}[0-9]+)?(?![_$a-zA-Z0-9])/)){
+                return Number(str)
+            }else{
+                return NaN
+            }
+        }
+
+
+        console.log(stringToNumber('12@3'))
+        console.log(stringToNumber('123'))
+
+        function NumberToString(num){
+           console.log(num.toString())
+        }
+        NumberToString(125000000000000000000000000000000000)
+    </script>
+</body>
+</html>

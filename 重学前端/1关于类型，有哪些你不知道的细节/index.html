@@ -17,6 +17,40 @@
             console.log(undefined)
         }
         f()
+
+        // string 拼接后
+        var a = 'abc'
+        var b = 'def'
+        var c = a + b
+        console.log(typeof c)
+        console.log(c instanceof Object)
+
+        var d = 0.1
+        var e = 0.2
+        console.log('合计',0.1 + 0.1 === 0.2)
+
+        var g = true
+        var h = 1
+        console.log(g == h)
+        console.log(g === h)
+
+        // 
+        var y = void 0
+        var x = Object.prototype.toString.call(y)
+        console.log(x)
+
+        // 拆箱实验
+        
+        var o = {
+            valueOf : () => {console.log("valueOf");},
+            toString : () => {console.log("toString"); }
+        }
+
+        // console.log(String(o * 2))
+        console.log(o*2)
+    // valueOf
+    // toString
+    // TypeError
     </script>
 </body>
 
