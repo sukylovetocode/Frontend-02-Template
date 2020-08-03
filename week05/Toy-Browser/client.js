@@ -1,6 +1,8 @@
 // URL解析HTTP并响应
 const net = require('net')
 const parser = require('./parser.js')
+const render = require('./render');
+const images = require('images');
 const { resolve } = require('path')
 
 // request类
@@ -325,6 +327,13 @@ void async function(){ // 自执行函数
     let response = await request.send()
     // 真正的浏览器是分布逐段发送的
     let dom = parser.parseHTML(response.body)  
-    // console.log(dom)
+    console.log(dom)
+    // 绘制图片
+
+    let viewport = images(800, 600)
+    render(viewport, dom)
+
+    viewport.save('viewport.jpg')
+
 }();
 

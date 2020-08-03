@@ -23,12 +23,12 @@ http.createServer((request, response) => {
 html{
     width:100vw;
     height:100vh;
-    background:#000;
+    background-color:rgb(0,0,0);
 }
 #box{
     width:200px;
     height:200px;
-    background:red;
+    background-color:rgb(255,0,0);
 }
 </style>
 </head>
