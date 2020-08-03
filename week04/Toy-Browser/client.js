@@ -93,11 +93,14 @@ class Request{
                 // 送到响应状态机进行解析
                 parser.receive(data.toString())
                 
-                // if(parser.isFinished){
-                //     console.log('解析完成')
-                //     resolve(parser.response)
-                //     connection.end() // 关闭链接
-                // }
+                // 持续检测中,一个个包发送过来
+                if(parser.isFinished){
+                    console.log('解析完成')
+                    resolve(parser.response)
+                    connection.end() // 关闭链接
+                }else{
+                    console.log('kankan')
+                }
             });
 
             connection.on('error', (err) => {
@@ -110,7 +113,7 @@ class Request{
 
     // 解析我们的响应文件成为以下的文件
     /*
-    *   HTTP/1.1 200 OK
+       HTTP/1.1 200 OK
         Content-Type: text/html
         Date: Sun, 02 Aug 2020 13:21:12 GMT
         Connection: keep-alive
@@ -144,29 +147,29 @@ class ResponseParser{
 
         this.current = this.WAITING_STATUS_LINE  // 当前状态 
         this.statusLine = "" // 储存状态码的哪一行
-        // this.headers = {}
-        // this.headerName = ""
-        // this.headerValue = ""
-        // this.bodyParser = null
+        this.headers = {} // 头部键值对储存
+        this.headerName = ""
+        this.headerValue = ""
+        this.bodyParser = null
     }
 
-    // get isFinished(){
-    //     return this.bodyParser && this.bodyParser.isFinished
-    // }
+    // 返回内部状态
+    get isFinished(){
+        return this.bodyParser && this.bodyParser.isFinished
+    }
 
-    // get response(){
-    //     this.statusLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/)
-    //     return {
-    //         statusCode: RegExp.$1,
-    //         statusText: RegExp.$2,
-    //         headers: this.headers,
-    //         body: this.bodyParser.content.join('')
-    //     }
-    // }
+    get response(){
+        this.statusLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/)
+        return {
+            statusCode: RegExp.$1,
+            statusText: RegExp.$2,
+            headers: this.headers,
+            body: this.bodyParser.content.join('')
+        }
+    }
 
     // 响应值传入，传入时进行状态机的处理
     receive(string){
-        console.log(string)
         // 逐个字符解析 
         for(let i=0;i<string.length;i++){
             this.receiveChar(string.charAt(i))
@@ -174,6 +177,12 @@ class ResponseParser{
     }
 
     // 对响应进行状态解析
+    /**
+     * \r回车 \n换行
+     * step 1 获取我们的状态码
+     * step 2 将我们头部信息都分解储存，为的是得到Transfer-Encoding:chunked,命令我们body的解析器
+     * 
+     */
     receiveChar(char){
         // console.log(char)
         switch(this.current){
@@ -181,62 +190,69 @@ class ResponseParser{
                 if(char === '\r'){ // 等到换行时进入下一个状态
                     this.current = this.WAITING_STATUS_LINE_END
                 }else{
-                    this.statusLine += char
+                    // this.statusLine += char
                 }
                 break;
             case this.WAITING_STATUS_LINE_END: 
-        }
-       
-    //     }else if(this.current === this.WAITING_STATUS_LINE_END){ // HTTP/1.1 200 OK 的结尾
-    //         if(char === '\n'){
-    //             this.current = this.WAITING_HEADER_NAME // 响应头 Content-Type: text/html
-    //         }
-    //     }else if(this.current === this.WAITING_HEADER_NAME){
-    //         if(char === ':'){ // Content-Type: text/html  Content-Type: 后面跟着一个空格
-    //             this.current = this.WAITING_HEADER_SPACE 
-    //         }else if(char === '\r'){
-    //             this.current = this.WAITING_HEADER_BLOCK_END // 响应头结束
-    //             // 和head 相关没法一开始就能够建立
-    //             if(this.headers['Transfer-Encoding'] === 'chunked'){
-    //                 this.bodyParser = new TrunkedBodyParser()
-    //             }
-    //         }else{
-    //             this.headerName += char // text/html
-    //         }
-    //     }else if(this.current === this.WAITING_HEADER_SPACE){
-    //         if(char === ' '){
-    //             this.current = this.WAITING_HEADER_VALUE //Content-Type: 后面跟着一个空格跳到这里
-    //         }
-    //     }else if(this.current === this.WAITING_HEADER_VALUE){
-    //         if(char === '\r'){ // this.headerValue 结束后
-    //             this.current = this.WAITING_HEADER_LINE_END
-    //             this.headers[this.headerName] = this.headerValue
-    //             this.headerName = "" // zhi kong
-    //             this.headerValue = ""
-    //         }else{
-    //             this.headerValue += char
-    //         }
-    //     }else if(this.current === this.WAITING_HEADER_LINE_END){ 
-    //         if(char === '\n'){
-    //             this.current = this.WAITING_HEADER_NAME // Content-Type 读完
-    //         }
-    //     }else if(this.current === this.WAITING_HEADER_BLOCK_END){
-    //         if(char === '\n'){
-    //             this.current = this.WAITING_BODY
-    //         }
-    //     }else if(this.current === this.WAITING_BODY){
-    //          this.bodyParser.receiveChar(char)
+                if(char === '\n'){
+                    this.current = this.WAITING_HEADER_NAME // 响应头 Content-Type: text/html
+                }
+                break;
+            case this.WAITING_HEADER_NAME:
+                if(char === ':'){ // Content-Type: text/html  Content-Type: 后面跟着一个空格
+                    this.current = this.WAITING_HEADER_SPACE 
+                }else if(char === '\r'){
+                    this.current = this.WAITING_HEADER_BLOCK_END // 响应头结束
+                    // 和head 相关没法一开始就能够建立,选择我们的body
+                    if(this.headers['Transfer-Encoding'] === 'chunked'){
+                        this.bodyParser = new TrunkedBodyParser()
+                    }
+                }else{
+                    this.headerName += char // Content-Type
+                }
+                break;
+            case  this.WAITING_HEADER_SPACE:
+                if(char === ' '){
+                    this.current = this.WAITING_HEADER_VALUE //Content-Type: 后面跟着一个空格跳到这里
+                }
+                break;
+            case this.WAITING_HEADER_VALUE:
+                // KV值读取完没
+                if(char === '\r'){ // this.headerValue 结束后
+                    this.current = this.WAITING_HEADER_LINE_END
+                    this.headers[this.headerName] = this.headerValue
+                    this.headerName = "" 
+                    this.headerValue = ""
+                }else{
+                    this.headerValue += char
+                }
+                break;
+            case this.WAITING_HEADER_LINE_END:
+                if(char === '\n'){
+                    this.current = this.WAITING_HEADER_NAME // Content-Type 读完
+                }
+                break;
+            case this.WAITING_HEADER_BLOCK_END:
+                if(char === '\n'){
+                    this.current = this.WAITING_BODY
+                }
+                break;
+            case this.WAITING_BODY:
+                this.bodyParser.receiveChar(char)
+                break;
+            default:
+                console.log('出错了')
         }
     }
 }
 
 class TrunkedBodyParser{
     constructor(){
-        this.WAITING_LENGTH = 0
-        this.WAITING_LENGTH_LINE_END = 1
-        this.READING_TRUNK = 2 //如果要退出 我们要计算trunk 长度
-        this.WAITING_NEW_LINE = 3
-        this.WAITING_NEW_LINE_END = 4
+        this.WAITING_LENGTH = 'WAITING_LENGTH'
+        this.WAITING_LENGTH_LINE_END = 'WAITING_LENGTH_LINE_END'
+        this.READING_TRUNK = 'READING_TRUNK' //如果要退出 我们要计算trunk 长度
+        this.WAITING_NEW_LINE = 'WAITING_NEW_LINE'
+        this.WAITING_NEW_LINE_END = 'WAITING_NEW_LINE_END'
 
         this.length = 0
         this.content = []
@@ -245,35 +261,45 @@ class TrunkedBodyParser{
     }
 
     receiveChar(char){
-        if(this.current === this.WAITING_LENGTH){ //4c 字符串一共的长度
-            if(char === '\r'){
-                if(this.length === 0){
-                    this.isFinished = true
+        switch(this.current){
+            case this.WAITING_LENGTH:
+                if(char === '\r'){
+                    if(this.length === 0){
+                        this.isFinished = true
+                    }
+                    this.current = this.WAITING_LENGTH_LINE_END
+                }else{
+                    // 计算我们文档字符长度
+                    this.length *= 16 // 16进制的处理
+                    this.length += parseInt(char, 16)
                 }
-                this.current = this.WAITING_LENGTH_LINE_END
-            }else{
-                this.length *= 16 // 16进制的处理
-                this.length += parseInt(char, 16)
-            }
-        }else if(this.current === this.WAITING_LENGTH_LINE_END){ // 准备处理正文
-            if(char === '\n'){
-                this.current = this.READING_TRUNK //准备读取html
-            }
-        }else if(this.current === this.READING_TRUNK){
-            this.content.push(char) //正文76个字符串都得读完
-            this.length --
-            if(this.length === 0){
-                this.current = this.WAITING_NEW_LINE
-            }
-        }else if(this.current === this.WAITING_NEW_LINE){
-            if(char === '\r'){
-                this.current = this.WAITING_NEW_LINE_END
-            }
-        }else if(this.current === this.WAITING_NEW_LINE_END){
-            if(char === '\n'){
-                this.current = this.WAITING_LENGTH
-            }
+            break;
+            case this.WAITING_LENGTH_LINE_END:
+                if(char === '\n'){
+                    this.current = this.READING_TRUNK //准备读取html
+                }
+            break; 
+            case this.READING_TRUNK:
+                this.content.push(char)
+                this.length --
+                if(this.length === 0){
+                    this.current = this.WAITING_NEW_LINE
+                }
+            break;
+            case this.WAITING_NEW_LINE:
+                if(char === '\r'){
+                    this.current = this.WAITING_NEW_LINE_END
+                }
+            break;
+            case this.WAITING_NEW_LINE_END:
+                if(char === '\n'){
+                    this.current = this.WAITING_LENGTH
+                }
+            break;
+            default:
+                console.log('出错了')
         }
+      
     }
 }
 
@@ -297,9 +323,8 @@ void async function(){ // 自执行函数
     })
 
     let response = await request.send()
-
-    // 应该变成异步分段处理的
-    // let dom = parser.parseHTML(response.body)  
-    // console.log(dom)
+    // 真正的浏览器是分布逐段发送的
+    let dom = parser.parseHTML(response.body)  
+    console.log(dom)
 }();
 

@@ -17,10 +17,23 @@ http.createServer((request, response) => {
         // console.log('body:', body)
         console.log('响应')
         response.writeHead(200, {'Content-Type': 'text/html'})
-        response.end(`<html>
-<head></head>
+        response.end(`<html meta="utf-8">
+<head>
+<style>
+html{
+    width:100vw;
+    height:100vh;
+    background:#000;
+}
+#box{
+    width:200px;
+    height:200px;
+    background:red;
+}
+</style>
+</head>
 <body>
-<div>Hello World</div>
+<div id="box">Hello World</div>
 </body>
 </html>`)
         console.log('结束')
