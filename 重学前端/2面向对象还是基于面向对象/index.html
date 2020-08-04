@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新建对象</title>
+</head>
+
+<body>
+
+    <script>
+        /*
+        * 从函数生成对象，经历了什么
+        */
+        // function Person(name, age) {
+        //     this.name = name;
+        //     this.age = age;
+        // }
+
+        // Person.prototype.motherland = 'china'
+
+        // let person01 = new Person('小明', 18)
+        // console.log(person01.prototype)
+        // console.log(Person.prototype)
+        // console.log(Object.prototype.toString.call(person01)) // 实例生成的Object
+        // console.log(Object.prototype.toString.call(Person)) // 原型对象是Function
+        // console.log(person01.name)
+
+        // function Person() { }
+        // Person.prototype.name = 'hanmeimei';
+        // Person.prototype.say = function () {
+        //     return this
+        // }
+        // Person.prototype.friends = ['lilei'];
+        // var person1 = new Person();
+        // console.log(Object.prototype.toString.call(person1)) // 实例生成的Object
+        // console.log(Object.prototype.toString.call(Person)) // 原型对象是Function
+        // console.log(Person)
+        // console.log(Person.prototype)
+        // console.log(person1.name)
+
+        // function Person(name) {
+        //     this.name = name
+        //     if (typeof this.say != 'function') {
+        //         Person.prototype.say = function () {
+        //             alert(this.name)
+        //         }
+        //     }
+        // }
+        // var person1 = new Person("abc");
+        // person1.say()
+
+
+
+        function Person(name) {
+            this.name = name
+            console.log(this)
+        }
+        Person.prototype.say = function () {
+            return this
+        }
+        // Person.prototype = {
+        //     name: 'abc'
+        // }
+        var a = new Person('abc')
+
+
+        // console.log(Person.prototype.constructor)
+        console.log(a.say())
+
+    </script>
+</body>
+
+</html>
