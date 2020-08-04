@@ -5,6 +5,7 @@
 + 什么叫原型
 + new 生成一个对象发生了啥呢
 + 构造函数模式和原型模式区别
++ function 和 object究竟有什么区别
 
 
 ##### JS中的面向对象
@@ -35,6 +36,32 @@
 
 ##### new 生成一个对象发生了啥呢
 + 一个继承自 Foo.prototype 的新对象被创建。
-+ 使用指定的参数调用构造函数 Foo，并将 this 绑定到新创建的对象。new Foo 等同于 new Foo()，也就是没有指定参数列表，Foo 不带任何参数调用的情况。
++ 使用指定的参数调用构造函数 Foo，并将 this 绑定到新创建的对象。
 + 由构造函数返回的对象就是 new 表达式的结果。如果构造函数没有显式返回一个对象，则使用步骤1创建的对象。（一般情况下，构造函数不返回值，但是用户可以选择主动返回对象，来覆盖正常的对象创建步骤）
+```
+// 伪代码
+var object = F.prototype
+var result = F()
+object.call(result)
+return object 
+```
 
+##### 构造函数模式和原型模式区别
+```javascript
+    function Person(name){
+        this.name = name
+        this.say = function(){
+            console.log(this.name)
+        } 
+    }
+    var person1 = new Person("suky")
+
+    function Person(){ }
+    Person.prototype.name = "abc"
+    var person2 = new Person()
+```
+
+##### function 和 object究竟有什么区别
++ function 应该是拥有一个[[call]]内部属性的特殊对象，他还有个特别的值prototype来为我们构造对象使用
++ object拥有[[prototype]]内部属性
++ 
