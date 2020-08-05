@@ -64,4 +64,4 @@ return object
 ##### function 和 object究竟有什么区别
 + function 应该是拥有一个[[call]]内部属性的特殊对象，他还有个特别的值prototype来为我们构造对象使用
 + object拥有[[prototype]]内部属性
-+ 
++ 所有new 函数后面会跟着内在属性[[construct]],而拥有[[construct]]属性的对象必然要拥有[[call]]，因此我们说new 后面的对象必然是function object

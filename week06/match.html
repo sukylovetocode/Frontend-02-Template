@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>match函数</title>
+</head>
+
+<body>
+    <div>
+        <div id="id"></div>
+    </div>
+    <script>
+        // 分解所有得复杂选择器
+        var selector = []
+        var token = ''
+
+        function match(selectors, element) {
+            // 拆分选择器
+            // 对于统配符不做任何处理
+            var selectors = selectors.replace('*', '')
+            // 对于伪类和伪元素也是删除后不做任何处理
+            let reg = /(:)+\w+/g
+            selectors = selectors.replace(reg, '')
+            // 对于属性选择器不会处理
+            // 以空格来分开
+            selectors = selectors.split(" ")
+            selectors = selectors.filter(v => v !== "")
+
+            // 从后往前匹配
+            let result = true
+            for (let selector of selectors) {
+                if (!result) { return false }
+                result = compareSelector(selector, element)
+            }
+            return result
+        }
+
+
+        function compareSelector(selector, element) {
+            console.log(selector)
+            // 检测是否id属性器
+            if (selector.match(/(#){1}\w+/g)) {
+                if (!document.getElementById(selector)) {
+                    return false
+                } else {
+                    return true
+                }
+            } else if (selector.match(/(.){1}\w+\b/)) {
+                console.log('不是吧')
+                if (!document.querySelector(selector)) {
+                    return false
+                } else {
+                    return true
+                }
+            } else if (selector.match(/\w+/g)) {
+                // 解析div
+                console.log('div')
+            } else if (selector.match(/(.)?[a-zA-Z*]+\[{1}\w+=\'\w+\'\]{1}/g)) {
+                // 属性字符串
+                console.log('属性')
+            }
+        }
+
+        console.log(match("* .abc[id='a'] .cls::hover", document.getElementById("id")))
+    </script>
+
+    <script>
+
+    </script>
+</body>
+
+</html>
