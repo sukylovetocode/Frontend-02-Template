@@ -25,13 +25,14 @@
             selectors = selectors.replace(reg, '')
             // 对于属性选择器不会处理
             // 以空格来分开
-            selectors = selectors.split(" ")
+            // 要一级级往父元素找
+            selectors = selectors.split(" ").reverse()
             selectors = selectors.filter(v => v !== "")
 
             // 从后往前匹配
-            let result = true
+            var result = true
             for (let selector of selectors) {
-                if (!result) { return false }
+                // if (!result) { return false }
                 result = compareSelector(selector, element)
             }
             return result
@@ -39,31 +40,43 @@
 
 
         function compareSelector(selector, element) {
-            console.log(selector)
             // 检测是否id属性器
-            if (selector.match(/(#){1}\w+/g)) {
-                if (!document.getElementById(selector)) {
-                    return false
-                } else {
-                    return true
-                }
-            } else if (selector.match(/(.){1}\w+\b/)) {
-                console.log('不是吧')
+            console.log(selector)
+            if (selector.match(/(#){1}(\w+)/g)) { //id
+               if(element.attributes['id'].value === selector.substring(selector.indexOf('#')+1,selector.length) ){
+                   return true
+               }else{
+                   return false
+               }
+            } else if (selector.match(/(.){1}\w+\W/)) { // 属性
+                console.log('attr')
                 if (!document.querySelector(selector)) {
                     return false
                 } else {
                     return true
                 }
-            } else if (selector.match(/\w+/g)) {
-                // 解析div
-                console.log('div')
-            } else if (selector.match(/(.)?[a-zA-Z*]+\[{1}\w+=\'\w+\'\]{1}/g)) {
-                // 属性字符串
-                console.log('属性')
+            } else if (selector.match(/^(\.\w+){0,1}$/)) { //class
+                console.log('class')
+                if(!element.attributes['class']){
+                    return false
+                }
+                if(element.attributes['class'].value === selector.substring(selector.indexOf('.')+1,selector.length) ){
+                   return true
+               }else{
+                   return false
+               }
+            }else{
+                console.log(element.tagName)
+                console.log(selector)
+                if(element.tagName === selector.toUpperCase()){
+                    return true
+                }else{
+                    return false
+                }
             }
         }
 
-        console.log(match("* .abc[id='a'] .cls::hover", document.getElementById("id")))
+        console.log(match("* div #id .cls", document.getElementById("id")))
     </script>
 
     <script>
