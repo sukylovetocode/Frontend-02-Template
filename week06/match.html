@@ -9,14 +9,16 @@
 
 <body>
     <div>
-        <div id="id"></div>
+        <div id="id">
+            <span></span>
+        </div>
     </div>
     <script>
         // 分解所有得复杂选择器
         var selector = []
         var token = ''
 
-        function match(selectors, element) {
+        function perpareCss(selectors) {
             // 拆分选择器
             // 对于统配符不做任何处理
             var selectors = selectors.replace('*', '')
@@ -26,15 +28,303 @@
             // 对于属性选择器不会处理
             // 以空格来分开
             // 要一级级往父元素找
-            selectors = selectors.split(" ").reverse()
-            selectors = selectors.filter(v => v !== "")
-
-            // 从后往前匹配
-            var result = true
-            for (let selector of selectors) {
-                // if (!result) { return false }
-                result = compareSelector(selector, element)
+            selectors = selectors.split(" ")
+            // div.cls div#id这两种情况需要单独再拆开，还有些空字符串也要去除
+            var arr = []
+            var Reg1 = /(\w+)(#{1}\w+)/
+            var Reg2 = /^(\w+)(\.{1}\w+)$/
+            for (var j = 0; j < selectors.length; j++) {
+                if (selectors[j].match(Reg1)) {
+                    // div#id
+                    // console.log(RegExp.$1, RegExp.$2)
+                    arr.push(RegExp.$1)
+                    arr.push(RegExp.$2)
+                } else if (selectors[j].match(Reg2)) {
+                    //div.cls
+                    // console.log(RegExp.$1, RegExp.$2)
+                    arr.push(RegExp.$1)
+                    arr.push(RegExp.$2)
+                } else if (selectors[j] === "") {
+                    continue
+                } else {
+                    arr.push(selectors[j])
+                }
             }
+            return arr
+        }
+
+        function elementHasID(selectors, element) {
+            if (element.attributes['id']) {
+                console.log('有id属性')
+                for (let j = 0; j < selectors.length; j++) {
+                    if (selectors[j] === '#' + element.attributes['id'].value) {
+                        console.log('id值可匹配')
+                        // 该选择器位置，继续匹配
+                        return j
+                    }
+                }
+                return false
+            }
+            return false
+        }
+
+        function elementHasClass(selectors, element) {
+            if (element.attributes['class']) {
+                console.log('有class 属性')
+                for (let j = 0; j < selectors.length; j++) {
+                    if (selectors[j] === element.attributes['class'].value) {
+                        console.log('class值可匹配')
+                        // 该选择器位置，继续匹配
+                        return j
+                    }
+                }
+            }
+            return false
+        }
+
+        function elementHasAttr(selectors, element) {
+            // 真不会
+            return false
+        }
+
+        function elementHasTag(selectors, element) {
+            for (let j = 0; j < selectors.length; j++) {
+                if (selectors[j] === element.tagName.toLowerCase()) {
+                    console.log('tag值匹配')
+                    // 该选择器位置，继续匹配
+                    return j
+                }
+            }
+            return false
+        }
+
+        async function match(selectors, element) {
+
+            selectors = await perpareCss(selectors)
+
+            // console.log(selectors)
+            // 传入的DOM元素是哪一个 id class attr tag
+            var elemSelectID = await elementHasID(selectors, element) // 该元素ID值可以和selectors中元素匹配
+            if (elemSelectID) {
+                // 假如只有这一个元素直接返回结果
+                if (selectors.length === 1) {
+                    return true
+                }
+
+                // 否则分组进行递归查询
+                var firstSelectors = []
+                var secondSelectors = []
+
+                //分成该元素前以及该元素后两部分进行递归
+                selectors.map((v, i) => {
+                    if (i < elemSelectID) {
+                        firstSelectors.push(v)
+                    } else {
+                        if (i !== elemSelectID) {
+                            secondSelectors.push(v)
+                        }
+                    }
+                })
+                // console.log(firstSelectors)
+                // console.log(secondSelectors)
+
+
+                //前部分元素
+                var result1 = await findFrontDOM(firstSelectors, element)
+
+                // 后部分元素
+                var result2 = await findBackDOM(secondSelectors, element)
+                return result2 && result1
+            } else {
+                //匹配class值
+                var elemSelectClass = await elementHasClass(selectors, element) // 该元素class值可以和selectors中元素匹配
+                if (elemSelectClass) {
+                    // 假如只有这一个元素直接返回结果
+                    if (selectors.length === 1) {
+                        return true
+                    }
+
+                    // 否则分组进行递归查询
+                    var firstSelectors = []
+                    var secondSelectors = []
+
+                    //分成该元素前以及该元素后两部分进行递归
+                    selectors.map((v, i) => {
+                        if (i < elemSelectID) {
+                            firstSelectors.push(v)
+                        } else {
+                            if (i !== elemSelectID) {
+                                secondSelectors.push(v)
+                            }
+                        }
+                    })
+                    // console.log(firstSelectors)
+                    // console.log(secondSelectors)
+
+
+                    //前部分元素
+                    var result1 = await findFrontDOM(firstSelectors, element)
+
+                    // 后部分元素
+                    var result2 = await findBackDOM(secondSelectors, element)
+                    return result2 && result1
+                } else {
+                    // 匹配属性值
+                    var elemSelectAttr = await elementHasAttr(selectors, element) // 该元素attr值可以和selectors中元素匹配
+                    if (elemSelectAttr) {
+                        // 假如只有这一个元素直接返回结果
+                        if (selectors.length === 1) {
+                            return true
+                        }
+
+                        // 否则分组进行递归查询
+                        var firstSelectors = []
+                        var secondSelectors = []
+
+                        //分成该元素前以及该元素后两部分进行递归
+                        selectors.map((v, i) => {
+                            if (i < elemSelectID) {
+                                firstSelectors.push(v)
+                            } else {
+                                if (i !== elemSelectID) {
+                                    secondSelectors.push(v)
+                                }
+                            }
+                        })
+                        // console.log(firstSelectors)
+                        // console.log(secondSelectors)
+
+
+                        //前部分元素
+                        var result1 = await findFrontDOM(firstSelectors, element)
+
+                        // 后部分元素
+                        var result2 = await findBackDOM(secondSelectors, element)
+                        return result2 && result1
+                    } else {
+                        // 最后了 匹配我们的tagName
+                        var elemSelectTagName = await elementHasTag(selectors, element) // 该元素有无tag
+                        if (elemSelectTagName) {
+                            // 假如只有这一个元素直接返回结果
+                            if (selectors.length === 1) {
+                                return true
+                            }
+
+                            // 否则分组进行递归查询
+                            var firstSelectors = []
+                            var secondSelectors = []
+
+                            //分成该元素前以及该元素后两部分进行递归
+                            selectors.map((v, i) => {
+                                if (i < elemSelectID) {
+                                    firstSelectors.push(v)
+                                } else {
+                                    if (i !== elemSelectID) {
+                                        secondSelectors.push(v)
+                                    }
+                                }
+                            })
+                            // console.log(firstSelectors)
+                            // console.log(secondSelectors)
+
+
+                            //前部分元素
+                            var result1 = await findFrontDOM(firstSelectors, element)
+
+                            // 后部分元素
+                            var result2 = await findBackDOM(secondSelectors, element)
+                            return result2 && result1
+                        } else {
+                            // 彻底不符合
+                            return false
+                        }
+                    }
+                }
+            }
+
+
+            //         } else if (element.attributes['class']) {
+            //             console.log('有class 属性')
+            //             for (let j = 0; j < selectors.length; j++) {
+            //                 if (selectors[j] === element.attributes['id'].value) {
+            //                     console.log('class值可匹配')
+            //                     // 该选择器位置，继续匹配
+            //                     index = 0
+            //                 }
+            //             }
+            //         } else {
+            //             // 没有属性就匹配tag
+            //             for (let j = 0; j < selectors.length; j++) {
+            //                 if (selectors[j] === element.tagName.toLowerCase()) {
+            //                     console.log('tag值可匹配')
+            //                     // 该选择器位置，继续匹配
+            //                     index = 0
+            //                 } else {
+            //                     console.log('tag值不在selector存在，彻底不匹配')
+            //                 }
+            //             }
+            //         }
+            //     }
+            // } else {
+            //     //没有属性就匹配tag
+            //     for (let j = 0; j < selectors.length; j++) {
+            //         if (selectors[j] === element.tagName.toLowerCase()) {
+            //             console.log('tag值可匹配')
+            //             // 该选择器位置，继续匹配
+            //             index = 0
+            //         } else {
+            //             console.log('tag值不在selector存在，彻底不匹配')
+            //         }
+            //     }
+            // }
+
+            // 找到所属选择器位置
+            // var result = false, index
+            // for (var i = 0; i < selectors.length; i++) {
+            //     //找到选择器与当前元素是否匹配
+            //     console.log(selectors[i])
+            //     // result = await compareSelector(selectors[i], element)
+            //     // console.log(result)
+            //     if (result) {
+            //         index = i
+            //         break
+            //     }
+            // }
+
+
+        }
+
+        async function findFrontDOM(selectors, element) {
+            if (selectors.length === 0) {
+                return true
+            }
+            if (!element.parentNode) {
+                return false
+            }
+            var elem = element
+            var result = false
+            await selectors.map(async (v) => {
+                elem = elem.parentNode
+                result = await compareSelector(v, elem)
+            })
+            return result
+        }
+
+        async function findBackDOM(selectors, element) {
+            if (selectors.length === 0) {
+                return true
+            }
+            if (selectors && element.childNodes.length === 0) {
+                return false
+            }
+            var elem = element
+            var result = false
+            await selectors.map(async (v) => {
+                elem = elem.children
+                for (let k = 0; k < elem.length; k++) {
+                    result = await compareSelector(v, elem[k])
+                }
+            })
             return result
         }
 
@@ -42,41 +332,52 @@
         function compareSelector(selector, element) {
             // 检测是否id属性器
             console.log(selector)
+            console.log(element)
+            var result = false
             if (selector.match(/(#){1}(\w+)/g)) { //id
-               if(element.attributes['id'].value === selector.substring(selector.indexOf('#')+1,selector.length) ){
-                   return true
-               }else{
-                   return false
-               }
+                console.log('id')
+                if (!element.attributes['id']) {
+                    result = false
+                }
+                if (element.attributes['id'].value === selector.substring(selector.indexOf('#') + 1, selector.length)) {
+                    result = true
+                } else {
+                    result = false
+                }
             } else if (selector.match(/(.){1}\w+\W/)) { // 属性
                 console.log('attr')
                 if (!document.querySelector(selector)) {
-                    return false
+                    result = false
                 } else {
-                    return true
+                    result = true
                 }
             } else if (selector.match(/^(\.\w+){0,1}$/)) { //class
                 console.log('class')
-                if(!element.attributes['class']){
-                    return false
+                if (!element.attributes['class']) {
+                    result = false
                 }
-                if(element.attributes['class'].value === selector.substring(selector.indexOf('.')+1,selector.length) ){
-                   return true
-               }else{
-                   return false
-               }
-            }else{
+                if (element.attributes['class'].value === selector.substring(selector.indexOf('.') + 1, selector.length)) {
+                    result = true
+                } else {
+                    result = false
+                }
+            } else {
                 console.log(element.tagName)
                 console.log(selector)
-                if(element.tagName === selector.toUpperCase()){
-                    return true
-                }else{
-                    return false
+                if (element.tagName === selector.toUpperCase()) {
+                    result = true
+                } else {
+                    result = false
                 }
             }
+            return new Promise((resolve, reject) => {
+                resolve(result)
+            })
         }
 
-        console.log(match("* div #id .cls", document.getElementById("id")))
+        match("* div.cls", document.getElementById("id")).then(data => {
+            console.log(data)
+        })
     </script>
 
     <script>
