@@ -10,10 +10,22 @@
 <body>
 
     <script>
-        function string2number(str) {
-            return parseInt(str)
-        }
-        console.log(string2number('abc'))
+ function foo() {
+  return () => {
+    return () => {
+      return () => {
+        console.log("id:", this.id);
+      };
+    };
+  };
+}
+
+var f = foo.call({id: 1});
+console.log(f)
+
+var t1 = f.call({id: 2})()();
+var t2 = f().call({id: 3})();
+var t3 = f()().call({id: 4});
     </script>
 </body>
 
