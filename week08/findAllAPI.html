@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对所有API进行分类</title>
+</head>
+<body>
+    
+    <script>
+        // 获取所有属性
+        let names = Object.getOwnPropertyNames(window)
+
+        function filterOut(names, props){
+            let set = new Set()
+            props.forEach(o => set.add(o))
+            return names.filter(e => !set.has(e))
+        }
+
+        // JS标准对象
+        // https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects
+        {
+            let objects = ['globalThis',"Object", "Function", "Array", "Number", "parseFloat", "parseInt", "NaN", "undefined", "Boolean", "String","Infinity", "Symbol", "Date", "Promise", "RegExp", "Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError", "JSON", "Math", "console", "Intl", "ArrayBuffer", "Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array","Float64Array", "Uint8ClampedArray", "BigUint64Array", "BigInt64Array", "DataView", "Map", "BigInt", "Set",
+            "WeakMap", "WeakSet", "Proxy", "Reflect","decodeURI", "decodeURIComponent", "encodeURI", "encodeURIComponent","escape", "unescape", "eval", "isFinite", "isNaN"]
+            names = filterOut(names, objects)
+        }
+
+        //subclass of Node
+        names = names.filter(e => {
+            try{
+                return !(window[e].prototype instanceof Node)
+            }catch(err){
+                return true
+            }
+        }).filter(e => e!= "Node")
+
+        //webkit private
+        names = names.filter(e => !e.match(/^webkit/))
+
+        // websocket
+        // https://www.w3.org/TR/2012/CR-websockets-20120920/#the-websocket-interface
+        {
+            let objects = ["WebSocket"]
+            names = filterOut(names, objects)
+        }
+
+        //webGL
+        // https://www.khronos.org/registry/webgl/specs/latest/1.0/#5
+        // https://www.khronos.org/registry/webgl/specs/latest/2.0/
+        {
+            let objects = ["WebGLVertexArrayObject", "WebGLUniformLocation", "WebGLTransformFeedback", "WebGLTexture", "WebGLSync", "WebGLShaderPrecisionFormat", "WebGLShader", "WebGLSampler",
+            "WebGLRenderingContext", "WebGLRenderbuffer", "WebGLQuery", "WebGLProgram", "WebGLFramebuffer", "WebGLContextEvent", "WebGLBuffer", "WebGLActiveInfo", "WebGL2RenderingContext"]
+            names = filterOut(names, objects)
+        }
+
+        // webaudio
+        // https://www.w3.org/TR/webaudio/
+        {
+            let objects = ["WaveShaperNode","StereoPannerNode","ScriptProcessorNode","PannerNode","OscillatorNode","AudioContext",
+        "BaseAudioContext","OfflineAudioContext","AudioBuffer","AudioNode","AudioParam","AudioScheduledSourceNode","AnalyserNode",
+        "OfflineAudioCompletionEvent","IIRFilterNode","AudioParamMap", "AudioListener", "AudioDestinationNode", "AudioBufferSourceNode",
+    "GainNode","DynamicsCompressorNode","DelayNode","ConvolverNode","ConstantSourceNode","BiquadFilterNode",""]
+            names = filterOut(names, objects)
+        }
+
+        // media source such as webaudio extensions
+        // https://w3c.github.io/media-source/#mediasource
+        {
+            let objects = ["SourceBufferList", "SourceBuffer"]
+            names = filterOut(names, objects)
+        }
+
+        // text encode
+        // https://encoding.spec.whatwg.org/
+        {
+            let objects = ["TextEncoderStream", "TextEncoder", "TextDecoderStream", "TextDecoder"]
+            names = filterOut(names, objects)
+        }
+
+        // sync manager
+        // https://wicg.github.io/background-sync/spec/#sync-manager-interface
+        {
+            names = filterOut(names, ['SyncManager'])
+        }
+
+
+        // webRTC
+        // https://w3c.github.io/webrtc-pc/#constructors-3
+        {
+            let objects = ["RTCTrackEvent", "RTCStatsReport", "RTCSessionDescription", "RTCSctpTransport", "RTCRtpTransceiver",
+            "RTCRtpSender", "RTCRtpReceiver", "RTCPeerConnectionIceEvent", "RTCPeerConnectionIceErrorEvent", "RTCPeerConnection", "RTCIceCandidate", "RTCErrorEvent",
+            "RTCError", "RTCDtlsTransport", "RTCDataChannelEvent", "RTCDataChannel", "RTCDTMFToneChangeEvent", "RTCDTMFSender", "RTCCertificate",
+            ]
+            names = filterOut(names, objects)
+        }
+
+        //screen-orientation
+        //https://w3c.github.io/screen-orientation/#screenorientation-interface
+        {
+            names = filterOut(names, ["ScreenOrientation"])
+        }
+
+    
+
+        // mediacapture-image
+        // https://w3c.github.io/mediacapture-image/
+        {
+            let objects = ["PhotoCapabilities", "PeriodicWave","MediaStreamTrackEvent","MediaStreamTrack","MediaStreamEvent", "MediaStream", "MediaStreamAudioSourceNode", "MediaStreamAudioDestinationNode", "MediaSettingsRange", "MediaRecorder", "MediaEncryptedEvent",
+            "MediaElementAudioSourceNode", "MediaCapabilities","DecompressionStream"]
+            names = filterOut(names, objects)
+        }
+
+
+        // media capture
+        // https://w3c.github.io/mediacapture-main
+        {
+            let objects = ["OverconstrainedError","ImageCapture"]
+            names = filterOut(names, objects)
+        }
+
+        // network information
+        // https://wicg.github.io/netinfo/#networkinformation-interface
+        {
+            let objects = ["NetworkInformation"]
+            names = filterOut(names, objects)
+        }
+
+        // input device
+        // https://wicg.github.io/input-device-capabilities/
+        {
+            let objects = ["NetworkInformation"]
+            names = filterOut(names, objects)
+        }
+
+        // geolocation 
+        // https://w3c.github.io/geolocation-api
+        {
+            let objects = ["GeolocationPositionError","GeolocationPosition", "GeolocationCoordinates", "Geolocation"]
+            names = filterOut(names, objects)
+        }
+
+        // indexed DB
+        // https://www.w3.org/TR/IndexedDB
+        {
+            let objects = ["IDBVersionChangeEvent", "IDBTransaction", "IDBRequest", "IDBOpenDBRequest", "IDBObjectStore", "IDBKeyRange", "IDBIndex",
+            "IDBFactory", "IDBDatabase", "IDBCursorWithValue", "IDBCursor"]
+            names = filterOut(names, objects)
+        }
+
+        // svg
+        // https://www.w3.org/TR/SVG11/types.html
+        {
+            let objects = ["SVGTransform", "SVGStringList", "SVGRect", "SVGPreserveAspectRatio", "SVGPointList","SVGPoint", "SVGNumberList", "SVGNumber", "SVGMatrix", "SVGLengthList", "SVGLength", "SVGAnimatedTransformList", "SVGAnimatedString", "SVGAnimatedRect", "SVGAnimatedPreserveAspectRatio"
+            ,"SVGAnimatedNumberList", "SVGAnimatedNumber", "SVGAnimatedLengthList", "SVGAnimatedLength", "SVGAnimatedInteger", "SVGAnimatedEnumeration", "SVGAnimatedBoolean", "SVGAnimatedAngle","SVGUnitTypes", "SVGTransformList", "SVGAngle"]
+            names = filterOut(names, objects)
+        }
+
+        // gamepad extensions
+        // https://w3c.github.io/gamepad/extensions.html
+        {
+            let objects = ["GamepadHapticActuator", "GamepadEvent", "Gamepad", "GamepadButton"]
+            names = filterOut(names, objects)
+        }
+
+
+        // web crypt
+        // https://www.w3.org/TR/WebCryptoAPI/
+        {
+            let objects = ["Crypto","SubtleCrypto"]
+            names = filterOut(names, objects)
+        }
+
+        // html 
+        // https://html.spec.whatwg.org/multipage/
+        {
+            let objects = ["DataTransfer","DataTransferItem","DataTransferItemList","DragEvent","EventSource","AbstractWorker","DedicatedWorkerGlobalScope","ServiceWorker","SharedWorker","SharedWorkerGlobalScope",
+        "Worker","StorageEvent", "Storage","Window","WindowProxy","Plugin", "PluginArray","MimeType","MimeTypeArray","Path2D","CanvasRenderingContext2D", "CanvasPattern", "CanvasGradient","CanvasCaptureMediaStreamTrack",
+        "ImageBitmapRenderingContext","MessagePort","postMessage","MessageChannel","XMLSerializer", "XMLHttpRequestUpload", "XMLHttpRequestEventTarget", "XMLHttpRequest"]
+            names = filterOut(names, objects)
+        }
+
+        // dom
+        // https://dom.spec.whatwg.org/
+        {
+            let objects = ["DOMError"]
+            names = filterOut(names, objects)
+        }
+
+        // xpath
+        // https://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult
+        {
+            let objects = ["XPathResult", "XPathExpression", "XPathEvaluator"]
+            names = filterOut(names, objects)
+        }
+
+
+        console.log(names)
+    </script>
+</body>
+</html>

@@ -6,3 +6,14 @@ HTML的定义
     + amp &
     + lt 小于号
     + gt  大于号
+
+html的标准来自于四个组织
++ khronos
+    + webGL
++ ECMA
+    + ECMAScript
++ WHATWG
+    + HTML
++ W3C
+    + webaudio
+    + CG/WG

@@ -10,22 +10,8 @@
 <body>
 
     <script>
- function foo() {
-  return () => {
-    return () => {
-      return () => {
-        console.log("id:", this.id);
-      };
-    };
-  };
-}
-
-var f = foo.call({id: 1});
-console.log(f)
-
-var t1 = f.call({id: 2})()();
-var t2 = f().call({id: 3})();
-var t3 = f()().call({id: 4});
+var a= [[]];
+[0,1,2,3].forEach(e=>console.log(e))
     </script>
 </body>
 
