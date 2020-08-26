@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicTacToe</title>
+    <style>
+        #board {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            background: #f1f1f1;
+            width: 150px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            font-size: 50px;
+            border: 1px solid #000;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="board"></div>
+
+    <script>
+        /*
+        * AI的逻辑策略：我（AI）走的这一步会让玩家的下一步面临最差的局面
+        */
+        var board = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+
+        var icon = 1
+
+        function show() {
+            document.getElementById('board').innerHTML = ""
+            // step 1 : 绘制棋盘
+            for (var a = 0; a < 3; a++) {
+                for (var b = 0; b < 3; b++) {
+                    var cell = document.createElement('div')
+                    cell.classList.add('cell')
+                    // step 2 : 绘制内部的图案
+                    cell.innerText = board[a][b] === 1 ? 'O' : board[a][b] === 2 ? 'X' : '';
+                    // step 3 : 给每个空格添加点击事件
+                    cell.onclick = function (a, b) {
+                        return function () {
+                            addNewPiece(a, b)
+                        }
+                    }(a, b)
+                    document.getElementById('board').appendChild(cell)
+                }
+            }
+        }
+
+        function addNewPiece(a, b) {
+            // step 4 : 放置棋子，并更换花色
+            board[a][b] = icon
+            if (win(board, icon)) {
+                console.log('赢了')
+            }
+            icon = 3 - icon
+            show()
+            // step 6 : 加入初步AI
+            AIWalk()
+        }
+
+        function AIWalk() {
+            let choice = bestChoice(board, icon)
+            if (choice.point) {
+                board[choice.point[0]][choice.point[1]] = icon
+            } else {
+                // 随便找一个空位填上去
+            }
+            if (win(board, icon)) {
+                console.log('winner')
+            }
+            icon = 3 - icon
+            show()
+        }
+
+        // step 5 : 检测现在棋局是否结束
+        function win(board, icon) {
+            // 横向检测
+            {
+                for (var i = 0; i < 3; i++) {
+                    let win = true
+                    for (var j = 0; j < 3; j++) {
+                        if (board[i][j] !== icon) {
+                            win = false
+                        }
+                    }
+                    if (win) {
+                        return true
+                    }
+                }
+            }
+            // 纵向检测
+            {
+                for (var i = 0; i < 3; i++) {
+                    let win = true
+                    for (var j = 0; j < 3; j++) {
+                        if (board[j][i] !== icon) {
+                            win = false
+                        }
+                    }
+                    if (win) {
+                        return true
+                    }
+                }
+            }
+            // 斜向检测
+            {
+                let win = true
+                for (var i = 0; i < 3; i++) {
+                    if (board[i][2 - i] !== icon) {
+                        win = false
+                    }
+                }
+                if (win) {
+                    return true
+                }
+            }
+            {
+                let win = true
+                for (var i = 0; i < 3; i++) {
+                    if (board[i][i] !== icon) {
+                        win = false
+                    }
+                }
+                if (win) {
+                    return true
+                }
+
+            }
+        }
+
+        // 克隆一份board进行检查
+        function clone(board) {
+            return JSON.parse(JSON.stringify(board)) //Object.create
+        }
+
+        // win || no lose  
+        function AIwillWin(board, icon) {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[i][j]) {
+                        continue
+                    }
+                    // 使用复制的棋盘进行检测,防止会搞乱本来的结构
+                    let tmp = clone(board)
+                    tmp[i][j] = icon
+                    if (win(tmp, icon)) {
+                        return [i, j]
+                    }
+                }
+            }
+            return null
+        }
+
+        // -1 lose
+        // 0 平局
+        // 1 win
+        function bestChoice(board, icon) {
+            // 假如这个点能让我获胜
+            let p
+            if (p = win(board, icon)) {
+                return {
+                    point: p,
+                    result: 1
+                }
+            }
+            // 找最好的点
+            let result = -2
+            let point = null
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[i][j]) {
+                        continue
+                    }
+                    let tmp = clone(board)
+                    tmp[i][j] = icon
+                    let r = bestChoice(tmp, 3 - icon).result // 对方最好的策略，递归
+
+                    if (-r > result) {
+                        result = -r
+                        point = [i, j]
+                    }
+                }
+            }
+            return {
+                point,
+                result: point ? result : 0
+            }
+        }
+
+        show()
+
+    </script>
+</body>
+
+</html>
