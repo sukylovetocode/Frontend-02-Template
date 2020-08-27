@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寻路算法</title>
+    <style>
+        #board {
+            display: flex;
+            flex-wrap: wrap;
+            width: 1200px;
+        }
+
+        .cell {
+            width: 10px;
+            height: 10px;
+            margin: 1px;
+            background: grey;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="board"></div>
+
+    <button onclick="saveMap()">Save</button>
+
+    <script>
+
+        // step 0 : 初始化地图数组
+        var map = window.localStorage['map'] ? JSON.parse(window.localStorage['map']) : Array(10000).fill(0)
+
+        function saveMap() {
+            window.localStorage['map'] = JSON.stringify(map)
+        }
+
+        var mousedown = false
+        var clear = false
+        var DOM = document.getElementById('board')
+
+        function sleep(t) {
+            return new Promise(function (resolve) {
+                setTimeout(resolve, t)
+            })
+        }
+
+        // step 1 : 绘制棋盘格
+        function drawBoard() {
+            let Fragment = document.createDocumentFragment()
+            for (let y = 0; y < 100; y++) {
+                for (let x = 0; x < 100; x++) {
+                    let cell = document.createElement('div')
+                    cell.classList.add('cell')
+
+                    // step 2 : 选择绘制颜色
+                    if (map[100 * y + x] === 1) {
+                        cell.style.backgroundColor = 'black'
+                    }
+
+                    // step 3 :添加监听器
+                    cell.addEventListener('mousemove', function (e) {
+                        if (mousedown) { // 按下拖动
+                            if (clear) {
+                                cell.style.backgroundColor = ""
+                                map[100 * y + x] = 0
+                            } else {
+                                cell.style.backgroundColor = "black"
+                                map[100 * y + x] = 1
+                            }
+                        }
+                    })
+
+                    Fragment.appendChild(cell)
+                }
+            }
+            DOM.appendChild(Fragment)
+        }
+        drawBoard()
+
+        // step 3 :添加监听器
+        document.body.addEventListener("mousedown", e => {
+            mousedown = true
+            clear = (e.which === 3)
+        })
+
+        document.body.addEventListener('mouseup', () => mousedown = false)
+        document.addEventListener('contextmenu', e => e.preventDefault())
+
+        // step 4 : 寻路算法
+        async function path(map, start, end) {
+            // 生成新的队列
+            let table = Object.create(map)
+            // var queue = [start]
+            let queue = new Sorted([start], (a, b) => distance(a) - distance(b))
+
+            async function insert(x, y, pre) {
+                if (x < 0 || x >= 100 || y < 0 || y >= 100) { // 超出边界
+                    return
+                }
+                // if (map[y * 100 + x]) {
+                if (table[y * 100 + x])
+                    return
+
+
+                await sleep(30)
+                DOM.children[y * 100 + x].style.backgroundColor = "lightgreen"
+
+                // map[y * 100 + x] = 2
+                // queue.push([x, y])
+                table[y * 100 + x] = pre
+                queue.give([x, y])
+            }
+
+            // 计算距离
+            function distance(point) {
+                return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2
+            }
+
+
+            while (queue.length) {
+                // let [x, y] = queue.shift()
+                let [x, y] = queue.take()
+                if (x === end[0] && y === end[1]) {
+                    // return true
+                    let path = []
+
+                    while (x != start[0] || y != start[1]) {
+                        path.push(map[y * 100 + x])
+                        [x, y] = table[y * 100 + x]
+                        DOM.children[y * 100 + x].style.backgroundColor = "purple"
+                    }
+                }
+                await insert(x - 1, y, [x, y])
+                await insert(x, y - 1, [x, y])
+                await insert(x + 1, y, [x, y])
+                await insert(x, y + 1, [x, y])
+            }
+            return path
+        }
+
+        // step 5 : 改变数据结构 可以换成二叉堆
+        // 要能够定制compare
+        class Sorted {
+            constructor(data, compare) {
+                this.data = data.slice()
+                this.compare = compare || ((a, b) => a - b)
+            }
+            take() {
+                if (!this.data.length) {
+                    return
+                }
+                let min = this.data[0]
+                let minIndex = 0
+
+                // take得时候拿一个最小的
+                for (let i = 1; i < this.data.length; i++) {
+                    if (this.compare(this.data[i], min) < 0) {
+                        min = this.data[i]
+                        minIndex = i
+                    }
+                }
+
+                // 与最后一个元素交换，min已经保存了
+                this.data[minIndex] = this.data[this.data.length - 1]
+                this.data.pop()
+                return min
+            }
+            give(v) {
+                this.data.push(v)
+            }
+            get length() {
+                return this.data.length
+            }
+        }
+
+    </script>
+</body>
+
+</html>
