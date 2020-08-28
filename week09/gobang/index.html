@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        #board {
+            width: 648px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cell {
+            background: #f1f1f1;
+            width: 50px;
+            height: 50px;
+            margin: 2px;
+            font-size: 30px;
+            text-align: center;
+            line-height: 50px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>五子棋对战</h1>
+    <div id="board"></div>
+
+    <script>
+        var map = window.localStorage['map'] ? JSON.parse(window.localStorage['map']) : Array(144).fill(0)
+        var Fragment = document.createDocumentFragment()
+        var DOM = document.getElementById('board')
+        var color = 1 // 棋盘三个状态 O X null
+
+        // step 1 : 绘制棋盘
+        function drawBoard() {
+            for (let y = 0; y < 12; y++) {
+                for (let x = 0; x < 12; x++) {
+                    let cell = document.createElement('div')
+                    cell.classList.add('cell')
+
+                    // step 2 : 添加点击事件
+                    cell.onclick = function (e) {
+                        if (map[100 * y + x]) {
+                            return
+                        } else {
+                            map[100 * y + x] = color
+                            // step 3 : 检测数据进行渲染
+                            cell.innerText = map[100 * y + x] === 1 ? 'O' : map[100 * y + x] === 2 ? "X" : ''
+                            // step 4 : 判断输赢
+                            if (isWin()) {
+                                console.log('win')
+                            }
+                            color = 3 - color
+                        }
+                    }
+
+                    Fragment.appendChild(cell)
+                }
+            }
+            DOM.appendChild(Fragment)
+        }
+
+        var count = 0
+        var wins = []
+        winsArr()
+        function winsArr() {
+            /**
+            * 0,0,0
+            * 1,0,0
+            * 2,0,0
+            * 3,0,0
+            * 4,0,0
+            */
+            // 赢法数组
+            for (let x = 0; x < 12; x++) {
+                wins[x] = []
+                for (let y = 0; y < 12; y++) {
+                    wins[x][y] = []
+                }
+            }
+
+            // 横向赢法
+            for (let x = 0; x < 12; x++) {
+                for (let y = 0; y < 7; y++) {
+                    for (let k = 0; k < 5; k++) {
+                        wins[x][y + k][count] = true
+                    }
+                    count++
+                }
+            }
+            // 竖向赢法
+            for (let x = 0; x < 7; x++) {
+                for (let y = 0; y < 12; y++) {
+                    for (let k = 0; k < 5; k++) {
+                        wins[x + k][y][count] = true
+                    }
+                    count++
+                }
+            }
+            // 斜向赢法
+            for (let x = 0; x < 7; x++) {
+                for (let y = 0; y < 7; y++) {
+                    for (let k = 0; k < 5; k++) {
+                        wins[x + k][y + k][count] = true
+                    }
+                    count++
+                }
+            }
+            for (let x = 0; x < 7; x++) {
+                for (let y = 11; y > 3; y--) {
+                    for (let k = 0; k < 5; k++) {
+                        wins[x + k][y - k][count] = true
+                    }
+                    count++
+                }
+            }
+        }
+
+        // function isWin() {
+
+        // }
+
+        drawBoard()
+    </script>
+</body>
+
+</html>
