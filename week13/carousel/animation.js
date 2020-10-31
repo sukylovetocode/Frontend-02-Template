@@ -28,13 +28,17 @@ export class Timeline{
                 }
                 animation.receiveTime(t);
             }
-            requestAnimationFrame(this[TICK]);
+            this[TICK_HANDLER] = requestAnimationFrame(this[TICK]);
         }
         this[TICK]();
     }
 
-    pause(){}
-    resume(){}
+    pause(){
+        cancelAnimationFrame(this[TICK_HANDLER]);
+    }
+    resume(){
+        
+    }
     reset(){}
 
     add(animation, startTime){
